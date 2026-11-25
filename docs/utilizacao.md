@@ -66,3 +66,7 @@ Consulte [privacidade e segurança](privacidade-e-seguranca.md) e [solução de 
 ## Alterações em desenvolvimento (0.3.0)
 
 A galeria passa a acompanhar o perfil, conjunto de Stories ou publicação aberta. Avançar Stories do mesmo perfil mantém o conjunto atual; abrir outro perfil ou publicação reinicia a galeria. O ícone de lixeira na barra limpa a galeria; Limpar seleção desmarca os itens sem apagá-los. Atualizar volta a permitir a coleta de mídias limpas. A captura estruturada depende de identificação do proprietário ou publicação e não recupera respostas recebidas antes da abertura do painel. O limite de galeria sobe para 10.000 itens. Essas alterações exigem homologação no Instagram real.
+
+## Vídeos e foto de perfil (0.3.1)
+
+Ao abrir um perfil, a foto de perfil pode aparecer na categoria Perfil, com seleção e download individual. A ação Selecionar todas em Todas não inclui automaticamente a foto de perfil; selecione-a manualmente ou utilize o filtro Perfil. Para vídeos, abra a publicação, Reel ou Story com o painel aberto e reproduza-o normalmente. A extensão reconhece formatos adicionais de metadados, mas necessita de uma URL direta de arquivo completo; fluxos segmentados, protegidos ou indisponíveis não são remontados. A resolução da foto depende do que a página disponibilizar.

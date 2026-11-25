@@ -1,4 +1,4 @@
-export type Origem = 'Stories' | 'Destaques' | 'Posts' | 'Reels'
+export type Origem = 'Stories' | 'Destaques' | 'Posts' | 'Reels' | 'Perfil'
 export type Filtro = 'Todas' | Origem
 export type Tipo = 'imagem' | 'video'
 export type Tema = 'sistema' | 'claro' | 'escuro'

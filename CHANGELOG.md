@@ -4,6 +4,13 @@
 
 O histórico registra funcionalidades e alterações relevantes do projeto. Os itens descrevem mudanças implementadas, não certificam que todos os cenários foram homologados.
 
+## 0.3.1 — em desenvolvimento
+
+- Suporte a endereços diretos de vídeos e imagens em estruturas GraphQL adicionais, inclusive carrosséis.
+- Foto de perfil selecionável separadamente, com preferência pela melhor resolução identificada.
+- Rejeição de respostas parciais no download e de URLs explicitamente segmentadas.
+- Testes simulados de vídeo, carrossel e foto de perfil.
+
 ## 0.3.0 — em desenvolvimento
 
 - Galeria contextual por perfil, sequência de Stories, destaque e publicação.

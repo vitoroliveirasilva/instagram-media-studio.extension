@@ -40,6 +40,10 @@ async function obter(midia: Midia, limite: number, sinal: AbortSignal) {
   const prazo = AbortSignal.any([sinal, AbortSignal.timeout(60000)])
   const resposta = await fetch(url, { credentials: 'omit', redirect: 'error', referrerPolicy: 'no-referrer', signal: prazo, cache: 'no-store' })
   const mime = resposta.headers.get('content-type') || ''
+  if (resposta.status === 206 || resposta.headers.has('content-range')) {
+    await resposta.body?.cancel().catch(() => {})
+    throw new Error('O servidor disponibilizou apenas um trecho do vídeo. O arquivo completo não está disponível.')
+  }
   if (!resposta.ok || !extensaoPermitida(mime, midia.tipo)) {
     await resposta.body?.cancel().catch(() => {})
     throw new Error('Mídia indisponível ou formato não suportado.')

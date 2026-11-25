@@ -1,7 +1,7 @@
 import type { Midia, Origem } from './tipos'
 
 export const LIMITE_GALERIA = 10000
-const origens = new Set<Origem>(['Stories', 'Destaques', 'Posts', 'Reels'])
+const origens = new Set<Origem>(['Stories', 'Destaques', 'Posts', 'Reels', 'Perfil'])
 const extensoes: Record<string, string> = { 'image/jpeg': 'jpg', 'image/png': 'png', 'image/webp': 'webp', 'image/avif': 'avif', 'image/gif': 'gif', 'video/mp4': 'mp4', 'video/webm': 'webm', 'video/quicktime': 'mov' }
 
 export function urlValida(valor: unknown): string {
@@ -28,7 +28,7 @@ export function normalizar(valor: unknown): Midia | null {
   const url = urlValida(item.url)
   if (!url || (item.tipo !== 'imagem' && item.tipo !== 'video') || !origens.has(item.origem as Origem)) return null
   const numero = (v: unknown) => typeof v === 'number' && Number.isFinite(v) && v > 0 ? Math.min(16384, Math.floor(v)) : 0
-  return { id: item.tipo + ':' + identidade(url), url, miniatura: urlValida(item.miniatura), tipo: item.tipo, origem: item.origem as Origem, largura: numero(item.largura), altura: numero(item.altura) }
+  return { id: item.origem === 'Perfil' ? 'imagem:perfil' : item.tipo + ':' + identidade(url), url, miniatura: urlValida(item.miniatura), tipo: item.tipo, origem: item.origem as Origem, largura: numero(item.largura), altura: numero(item.altura) }
 }
 
 export function reunir(anteriores: Midia[], novas: unknown[]): Midia[] {
@@ -44,7 +44,7 @@ export function reunir(anteriores: Midia[], novas: unknown[]): Midia[] {
   }
   const lista = [...mapa.values()]
   const miniaturas = new Set(lista.filter(item => item.tipo === 'video' && item.miniatura).map(item => identidade(item.miniatura)))
-  return lista.filter(item => item.tipo !== 'imagem' || !miniaturas.has(identidade(item.url))).slice(-LIMITE_GALERIA)
+  return lista.filter(item => item.origem === 'Perfil' || item.tipo !== 'imagem' || !miniaturas.has(identidade(item.url))).slice(-LIMITE_GALERIA)
 }
 
 export function extensaoPermitida(mime: string, tipo: Midia['tipo']): string | undefined {

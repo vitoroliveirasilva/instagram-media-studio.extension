@@ -42,3 +42,12 @@ describe('Galeria de mídias', () => {
     expect(extensaoPermitida('video/webm; charset=binary', 'video')).toBe('webm')
   })
 })
+
+
+describe('Foto de perfil', () => {
+  it('mantém somente a melhor foto de perfil, sem misturá-la com publicações', () => {
+    const lista = reunir([], [exemplo, { ...exemplo, origem: 'Perfil', largura: 100, altura: 100 }, { ...exemplo, origem: 'Perfil', url: exemplo.url.replace('foto.jpg','avatar.jpg'), largura: 640, altura: 640 }])
+    expect(lista).toHaveLength(2)
+    expect(lista.find(item => item.origem === 'Perfil')?.largura).toBe(640)
+  })
+})

@@ -16,6 +16,7 @@
   function identidade(midia) {
     const caminho = new URL(midia.url).pathname
     const arquivo = caminho.split('/').pop() || ''
+    if (midia.origem === 'Perfil') return 'imagem:perfil'
     return midia.tipo + ':' + (/^\d{8,}(?:_\d+)+_[a-z0-9]+\.[a-z0-9]+$/i.test(arquivo) ? arquivo.toLowerCase() : caminho)
   }
 
@@ -59,7 +60,7 @@
     sincronizar()
     const validas = midias.slice(0, 150).flatMap(midia => {
       const url = validarUrl(midia?.url)
-      if (!url || !['imagem','video'].includes(midia.tipo) || !['Stories','Destaques','Posts','Reels'].includes(midia.origem)) return []
+      if (!url || !['imagem','video'].includes(midia.tipo) || !['Stories','Destaques','Posts','Reels','Perfil'].includes(midia.origem)) return []
       return [{ url, miniatura: validarUrl(midia.miniatura), tipo: midia.tipo, origem: midia.origem, largura: Math.max(0, Number(midia.largura) || 0), altura: Math.max(0, Number(midia.altura) || 0) }]
     })
     const novas = validas.filter(midia => {
@@ -77,11 +78,42 @@
     }
   }
 
+  function imagemDireta(elemento) {
+    const candidatos = elemento.srcset ? elemento.srcset.split(',').map(item => item.trim().split(/\s+/)).filter(item => validarUrl(item[0])).sort((a,b) => (parseFloat(b[1]) || 0) - (parseFloat(a[1]) || 0)) : []
+    return validarUrl(candidatos[0]?.[0] || elemento.currentSrc || elemento.src)
+  }
+
+  function videoDireto(elemento) {
+    for (const valor of [elemento.currentSrc, elemento.src, ...Array.from(elemento.querySelectorAll('source'), fonte => fonte.src)]) {
+      const url = validarUrl(valor)
+      if (!url) continue
+      const endereco = new URL(url)
+      if (/\.(m3u8|mpd|m4s|ts)$/i.test(endereco.pathname) || endereco.searchParams.has('bytestart') || endereco.searchParams.has('byteend')) continue
+      return url
+    }
+    return ''
+  }
+
+  function coletarPerfil() {
+    if (contexto.tipo !== 'perfil') return
+    const cabecalho = document.querySelector('main header') || document.querySelector('main [role="banner"]')
+    if (!cabecalho) return
+    const imagens = [...cabecalho.querySelectorAll('img')].filter(img => {
+      const alt = (img.alt || '').toLowerCase()
+      return imagemDireta(img) && (alt.includes(contexto.alvo) || /profile picture|foto (de|do) perfil|imagem (de|do) perfil/i.test(alt))
+    })
+    const foto = imagens.find(img => (img.alt || '').toLowerCase().includes(contexto.alvo)) || imagens[0]
+    if (!foto) return
+    const url = imagemDireta(foto)
+    publicar([{ url, miniatura: url, tipo: 'imagem', origem: 'Perfil', largura: foto.naturalWidth, altura: foto.naturalHeight }])
+  }
+
   function coletar() {
     if (!portas.size) return
     sincronizar()
     ultimaColeta = performance.now()
     if (ultimaColeta < aguardarAte) { agendar(); return }
+    coletarPerfil()
     const midias = []
     const historia = contexto.tipo === 'stories' || contexto.tipo === 'destaque'
     let elementos
@@ -98,7 +130,10 @@
         return caixa.left <= centro && caixa.right >= centro && caixa.height >= Math.min(240, innerHeight * .4) && caixa.width >= Math.min(140, innerWidth * .2)
       })
     }
-    for (const elemento of elementos) {
+    const lista = [...elementos]
+    const videos = lista.filter(elemento => elemento instanceof HTMLVideoElement && visivel(elemento))
+    const capas = new Set(videos.map(elemento => validarUrl(elemento.poster)).filter(Boolean))
+    for (const elemento of lista) {
       if (midias.length >= 100) publicar(midias.splice(0))
       if (!visivel(elemento)) continue
       if (elemento instanceof HTMLImageElement && (elemento.closest('header, nav, [role="navigation"]') || elemento.closest('button')?.getBoundingClientRect().width < 100)) continue
@@ -106,9 +141,8 @@
       const largura = video ? elemento.videoWidth : elemento.naturalWidth
       const altura = video ? elemento.videoHeight : elemento.naturalHeight
       if (!video && (largura < 240 || altura < 240)) continue
-      const candidatos = !video && elemento.srcset ? elemento.srcset.split(',').map(item => item.trim().split(/\s+/)).filter(item => validarUrl(item[0])).sort((a,b) => (parseFloat(b[1]) || 0) - (parseFloat(a[1]) || 0)) : []
-      const url = video ? elemento.currentSrc || elemento.src || elemento.querySelector('source')?.src : candidatos[0]?.[0] || elemento.currentSrc || elemento.src
-      if (!validarUrl(url)) continue
+      const url = video ? videoDireto(elemento) : imagemDireta(elemento)
+      if (!url || (!video && capas.has(url))) continue
       midias.push({ url, miniatura: video ? elemento.poster : url, tipo: video ? 'video' : 'imagem', origem: origem(elemento), largura, altura })
     }
     publicar(midias)
@@ -140,6 +174,7 @@
     window.addEventListener('scroll', agendar, true)
     document.addEventListener('load', agendar, true)
     document.addEventListener('loadedmetadata', agendar, true)
+    document.addEventListener('play', agendar, true)
     coletar()
   }
 
@@ -155,6 +190,7 @@
     window.removeEventListener('scroll', agendar, true)
     document.removeEventListener('load', agendar, true)
     document.removeEventListener('loadedmetadata', agendar, true)
+    document.removeEventListener('play', agendar, true)
   }
 
   chrome.runtime.onConnect.addListener(porta => {

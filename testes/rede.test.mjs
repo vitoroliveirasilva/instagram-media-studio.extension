@@ -145,3 +145,43 @@ test('descarta resposta ao navegar para Stories de outro perfil', async () => {
   await aguardar()
   assert.equal(capturas(ambiente).length, 0)
 })
+
+
+test('reconhece vídeo GraphQL por video_url e preserva a miniatura', async () => {
+  const ambiente = preparar({ data: { shortcode_media: { shortcode: 'ABC', __typename: 'GraphVideo', is_video: true, video_url: video, display_url: foto, dimensions: { width: 720, height: 1280 } } } }, 'https://www.instagram.com/reel/ABC/')
+  ambiente.ativar(true)
+  await ambiente.janela.fetch(consulta)
+  await aguardar()
+  const lista = capturas(ambiente)
+  assert.equal(lista.length, 1)
+  assert.equal(lista[0].tipo, 'video')
+  assert.equal(lista[0].url, video)
+  assert.equal(lista[0].miniatura, foto)
+})
+
+test('reconhece carrossel GraphQL com imagem e vídeo', async () => {
+  const ambiente = preparar({ shortcode: 'ABC', __typename: 'GraphSidecar', edge_sidecar_to_children: { edges: [{ node: { __typename: 'GraphImage', display_url: foto } }, { node: { __typename: 'GraphVideo', video_url: video, display_url: foto + '?capa' } }] } }, 'https://www.instagram.com/p/ABC/')
+  ambiente.ativar(true)
+  await ambiente.janela.fetch(consulta)
+  await aguardar()
+  assert.deepEqual(capturas(ambiente).map(m => m.tipo), ['imagem','video'])
+})
+
+test('não apresenta a capa de um vídeo segmentado como vídeo completo', async () => {
+  const ambiente = preparar({ shortcode: 'ABC', __typename: 'GraphVideo', is_video: true, video_url: video + '?bytestart=0&byteend=100', display_url: foto }, 'https://www.instagram.com/reel/ABC/')
+  ambiente.ativar(true)
+  await ambiente.janela.fetch(consulta)
+  await aguardar()
+  assert.equal(capturas(ambiente).length, 0)
+})
+
+test('captura somente a foto de perfil correspondente ao contexto aberto', async () => {
+  const ambiente = preparar({ data: { user: { username: 'exemplo', profile_pic_url: foto, profile_pic_url_hd: foto + '?hd' }, outro: { username: 'outro', profile_pic_url_hd: foto + '?outro' } } }, 'https://www.instagram.com/exemplo/')
+  ambiente.ativar(true)
+  await ambiente.janela.fetch('https://www.instagram.com/api/v1/users/web_profile_info/?username=exemplo')
+  await aguardar()
+  const lista = capturas(ambiente)
+  assert.equal(lista.length, 1)
+  assert.equal(lista[0].origem, 'Perfil')
+  assert.equal(lista[0].url, foto + '?hd')
+})
