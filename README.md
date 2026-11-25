@@ -1,10 +1,42 @@
 # Instagram Media Studio
 
-Extensão para Google Chrome e Microsoft Edge que reúne imagens e vídeos carregados durante a navegação no Instagram, em um painel lateral independente das ferramentas de desenvolvedor.
+**Suas mídias do Instagram, organizadas em um único painel.**
 
-## Instalação local
+Extensão de navegador para identificar, visualizar, selecionar e baixar imagens e vídeos carregados durante a navegação no Instagram. A galeria funciona no painel lateral, sem depender das ferramentas de desenvolvedor do navegador e sem exigir um servidor próprio.
 
-Requisitos: Node.js 22 LTS e npm.
+![Versão](https://img.shields.io/badge/vers%C3%A3o-0.2.0-9d467b)
+![Manifesto](https://img.shields.io/badge/Manifest-V3-555)
+![TypeScript](https://img.shields.io/badge/TypeScript-5.8-3178c6)
+![Licença](https://img.shields.io/badge/licen%C3%A7a-MIT-555)
+
+> **Estado do projeto:** desenvolvimento e homologação. A versão 0.2.0 está disponível na branch `dev`. A compatibilidade funcional com sessões reais do Instagram ainda precisa ser comprovada. Não se trata de uma publicação oficial nas lojas de extensões.
+
+## Funcionalidades
+
+| Recurso | Descrição |
+| --- | --- |
+| Painel lateral | Galeria acessível ao lado da página do Instagram. |
+| Captura durante a navegação | Identificação de mídias em elementos visíveis e respostas de mídia já carregadas pela página. |
+| Organização | Filtros por publicações, Stories, Reels e destaques. |
+| Visualização | Grade responsiva, lista, miniaturas e pré-visualização de imagens e vídeos. |
+| Seleção | Seleção individual, múltipla e de todos os itens do filtro atual. |
+| Downloads | Arquivo individual ou ZIP com várias mídias, com progresso da preparação e cancelamento. |
+| Aparência | Temas claro, escuro e automático, com preferências salvas localmente. |
+| Galerias por aba | Separação das mídias em memória enquanto o painel permanece aberto. |
+
+A identificação de mídias e categorias é baseada em heurísticas. O Instagram pode alterar sua estrutura, carregar mídias antecipadamente ou fornecer vídeos que a extensão não consegue baixar diretamente.
+
+## Instalação rápida
+
+### Pré-requisitos
+
+- Google Chrome ou Microsoft Edge atualizado, com suporte a extensões Manifest V3 e painel lateral.
+- Git, Node.js 22 LTS e npm, caso a instalação seja feita a partir do código-fonte.
+- Acesso ao repositório e às mídias que serão utilizadas.
+
+O manifesto declara Chrome 116 como versão mínima; a compatibilidade efetiva com versões antigas não foi homologada. Recomenda-se utilizar uma versão estável atualizada.
+
+### 1. Obter e compilar
 
 ```powershell
 git clone -b dev https://github.com/vitoroliveirasilva/instagram-media-studio.extension.git
@@ -14,40 +46,61 @@ npm run verificar
 npm run build
 ```
 
-1. Abra `edge://extensions` ou `chrome://extensions`.
-2. Ative o modo de desenvolvedor.
-3. Clique em **Carregar sem compactação** e selecione a pasta `dist`.
-4. Abra ou atualize o Instagram, fixe a extensão na barra de ferramentas e clique no ícone.
+A extensão pronta para instalação será gerada na pasta `dist/`. Se uma verificação falhar, corrija o problema antes de carregar o resultado.
 
-## Uso
+### 2. Instalar no navegador
 
-Navegue normalmente com o painel aberto. A extensão identifica imagens e vídeos em elementos visíveis e em respostas de mídia já carregadas pela página. Utilize os filtros de publicações, Stories, Reels e destaques, alterne entre grade e lista, selecione arquivos ou abra a pré-visualização. O download individual usa o navegador e a seleção de vários itens gera um ZIP.
+| Navegador | Página de gerenciamento |
+| --- | --- |
+| Microsoft Edge | `edge://extensions` |
+| Google Chrome | `chrome://extensions` |
 
-## Privacidade e limites
+1. Abra a página correspondente no navegador.
+2. Ative o **Modo de desenvolvedor**.
+3. Clique em **Carregar sem compactação** (ou opção equivalente).
+4. Selecione a pasta `dist`, não a raiz do repositório.
+5. Fixe o ícone da extensão na barra de ferramentas, se desejar.
+6. Abra ou atualize a página do Instagram e clique no ícone da extensão.
 
-A captura ocorre somente enquanto o painel estiver conectado à aba ativa do Instagram. A galeria permanece em memória durante a sessão do painel e é separada por aba; apenas as preferências de aparência e visualização são persistidas. Não há armazenamento de cookies, senhas, cabeçalhos de autenticação ou respostas completas, nem consultas adicionais à API do Instagram. Não há servidor externo. Baixe apenas mídias para as quais possua autorização.
+Também é possível usar o artefato da [integração contínua](https://github.com/vitoroliveirasilva/instagram-media-studio.extension/actions), caso exista uma execução bem-sucedida para a versão desejada. Consulte o [guia de instalação](docs/instalacao.md).
 
-A captura depende da estrutura atual do Instagram. URLs podem expirar, vídeos segmentados ou protegidos podem não estar disponíveis e nem todas as mídias carregadas antecipadamente pela página correspondem ao item em exibição. Downloads individuais e em lote têm limite de 250 MiB de conteúdo, com leitura incremental, verificação de formato, cancelamento e indicação de falhas parciais. O ZIP pode exigir memória adicional para montagem. A extensão não contorna controles de acesso, não navega automaticamente e não garante a captura de todas as mídias. A galeria mantém até mil mídias por aba.
+## Como utilizar
 
-## Desenvolvimento
+1. Abra o Instagram e o painel lateral da extensão.
+2. Navegue normalmente pelas publicações, Stories, destaques ou Reels.
+3. Escolha um filtro e alterne entre grade e lista.
+4. Clique em uma mídia para selecioná-la ou use o ícone de expansão para pré-visualizá-la.
+5. Baixe um item pelo botão individual ou selecione vários e utilize **Baixar mídias selecionadas**.
 
-React, TypeScript, Vite, Tailwind CSS, Lucide, JSZip e Manifest V3. Os scripts executados na página usam JavaScript nativo. Os testes unitários abrangem normalização, validação de URLs, deduplicação, limites, formatos de arquivo e leitura incremental. O comando de verificação também valida a sintaxe dos scripts e a tipagem TypeScript.
+Os downloads são encaminhados ao gerenciador do navegador, na subpasta `Instagram Media Studio/` do destino configurado. A extensão não confirma a conclusão de todos os downloads; consulte o gerenciador para acompanhar o resultado.
 
-```powershell
-npm test
-npm run build
-```
+## Documentação
 
-A validação funcional no Instagram autenticado deve ser realizada no navegador após a instalação.
+| Documento | Conteúdo |
+| --- | --- |
+| [Instalação e atualização](docs/instalacao.md) | Configuração local, instalação pelo código ou artefato e remoção. |
+| [Guia de utilização](docs/utilizacao.md) | Galeria, filtros, seleção, prévia, downloads e configurações. |
+| [Arquitetura técnica](docs/arquitetura.md) | Estrutura do projeto, comunicação, fluxo de dados e decisões técnicas. |
+| [Privacidade e segurança](docs/privacidade-e-seguranca.md) | Permissões, dados, controles, riscos e limites de confiança. |
+| [Desenvolvimento](docs/desenvolvimento.md) | Ambiente, comandos, padrões e integração contínua. |
+| [Testes e homologação](docs/testes-e-homologacao.md) | Cobertura dos testes, critérios de aceite e roteiro manual. |
+| [Solução de problemas](docs/solucao-de-problemas.md) | Diagnóstico de captura, painel, compilação e downloads. |
+| [Histórico de alterações](CHANGELOG.md) | Evolução das versões. |
+| [Contribuição](CONTRIBUTING.md) | Convenções do repositório e processo de alterações. |
+| [Relato de vulnerabilidades](SECURITY.md) | Orientações para comunicação responsável. |
 
-## Verificação manual
+## Tecnologias
 
-- Abra o painel em uma aba do Instagram e navegue por imagens, carrosséis, Stories, destaques e Reels.
-- Troque de aba, volte ao Instagram e confirme que as galerias permanecem separadas.
-- Teste a seleção por filtro, a pré-visualização, o cancelamento e os downloads individuais e em ZIP.
-- Teste mídia expirada, ausência de mídia e os três temas.
-- Feche o painel e confirme que a captura não continua ativa.
+React 19 · TypeScript 5.8 · Vite 6 · Tailwind CSS 3 · Lucide React · JSZip · Vitest · Manifest V3 · JavaScript nativo · GitHub Actions.
 
-## Integração contínua
+## Privacidade e limitações
 
-O GitHub Actions executa as verificações em alterações nas branches `dev` e `prod` e disponibiliza a pasta compilada como artefato quando a execução for bem-sucedida. Os testes de captura usam respostas simuladas e não acessam contas ou dados reais do Instagram.
+O processamento ocorre no navegador. Não há backend próprio, cadastro adicional, telemetria implementada ou persistência da galeria. Apenas tema e modo de visualização são armazenados pela extensão. A visualização e o download fazem requisições aos servidores de mídia do Instagram/Meta.
+
+A galeria é limitada a mil itens por aba; downloads individuais e em lote têm limite de 250 MiB de conteúdo. URLs podem expirar, formatos podem ser rejeitados e vídeos segmentados ou protegidos podem não estar disponíveis. A extensão não contorna controles de acesso, não navega automaticamente e não promete recuperar mídias removidas ou expiradas.
+
+Utilize apenas conteúdos para os quais tenha autorização e respeite direitos autorais, privacidade e as regras da plataforma.
+
+## Licença
+
+Distribuído sob a [licença MIT](LICENSE). Projeto independente, sem vínculo oficial com o Instagram ou a Meta.
