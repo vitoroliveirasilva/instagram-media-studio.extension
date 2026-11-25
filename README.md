@@ -47,3 +47,7 @@ A validação funcional no Instagram autenticado deve ser realizada no navegador
 - Teste a seleção por filtro, a pré-visualização, o cancelamento e os downloads individuais e em ZIP.
 - Teste mídia expirada, ausência de mídia e os três temas.
 - Feche o painel e confirme que a captura não continua ativa.
+
+## Integração contínua
+
+O GitHub Actions executa as verificações em alterações nas branches `dev` e `prod` e disponibiliza a pasta compilada como artefato quando a execução for bem-sucedida. Os testes de captura usam respostas simuladas e não acessam contas ou dados reais do Instagram.
