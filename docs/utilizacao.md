@@ -62,3 +62,7 @@ O tema e o modo de visualização são lembrados entre sessões. A lista de míd
 Abra apenas as páginas e mídias que deseja utilizar. Se uma mídia estiver indisponível, tente reabri-la e atualizar a galeria. Evite compartilhar URLs de mídia, pois podem conter assinaturas temporárias. Utilize lotes menores para reduzir o consumo de memória.
 
 Consulte [privacidade e segurança](privacidade-e-seguranca.md) e [solução de problemas](solucao-de-problemas.md).
+
+## Alterações em desenvolvimento (0.3.0)
+
+A galeria passa a acompanhar o perfil, conjunto de Stories ou publicação aberta. Avançar Stories do mesmo perfil mantém o conjunto atual; abrir outro perfil ou publicação reinicia a galeria. O ícone de lixeira na barra limpa a galeria; Limpar seleção desmarca os itens sem apagá-los. Atualizar volta a permitir a coleta de mídias limpas. A captura estruturada depende de identificação do proprietário ou publicação e não recupera respostas recebidas antes da abertura do painel. O limite de galeria sobe para 10.000 itens. Essas alterações exigem homologação no Instagram real.

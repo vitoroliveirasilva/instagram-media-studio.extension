@@ -21,6 +21,9 @@ export default function Painel() {
   const porta = useRef<chrome.runtime.Port | null>(null)
   const abaAtual = useRef<number | undefined>(undefined)
   const memorias = useRef(new Map<number, Midia[]>())
+  const contextos = useRef(new Map<number, string>())
+  const contextoAtual = useRef('')
+  const [tituloContexto, definirTituloContexto] = useState('')
   const dialogo = useRef<HTMLDialogElement>(null)
   const downloadAtual = useRef<AbortController | null>(null)
   const janelaAtual = useRef<number | undefined>(undefined)
@@ -51,6 +54,8 @@ export default function Painel() {
         clearTimeout(prazo)
         if (abaAtual.current !== aba?.id) {
           abaAtual.current = aba?.id
+          contextoAtual.current = ''
+          definirTituloContexto('')
           downloadAtual.current?.abort()
           definirSelecionadas([])
           definirPrevia(null)
@@ -74,7 +79,25 @@ export default function Painel() {
             definirAviso('')
             return
           }
-          if (!Array.isArray(mensagem?.midias)) return
+          if (mensagem?.acao === 'contexto') {
+            const contexto = mensagem.contexto
+            if (typeof contexto?.chave !== 'string' || typeof contexto?.titulo !== 'string') return
+            contextoAtual.current = contexto.chave
+            definirTituloContexto(contexto.titulo.slice(0, 100))
+            if (contextos.current.get(id) !== contexto.chave) {
+              contextos.current.set(id, contexto.chave)
+              memorias.current.delete(id)
+              definirMidias([])
+              definirSelecionadas([])
+              definirFalhas([])
+              definirPrevia(null)
+              definirFiltro('Todas')
+              definirAviso('')
+              downloadAtual.current?.abort()
+            }
+            return
+          }
+          if (!Array.isArray(mensagem?.midias) || mensagem.contexto !== contextoAtual.current) return
           const novas = reunir(memorias.current.get(id) || [], mensagem.midias)
           memorias.current.set(id, novas)
           definirMidias(novas)
@@ -118,7 +141,7 @@ export default function Painel() {
       }
       if (alteracao.status === 'complete') void conectar()
     }
-    const removida = (id: number) => { memorias.current.delete(id) }
+    const removida = (id: number) => { memorias.current.delete(id); contextos.current.delete(id) }
     chrome.tabs.onActivated.addListener(ativada)
     chrome.tabs.onUpdated.addListener(atualizada)
     chrome.tabs.onRemoved.addListener(removida)
@@ -170,18 +193,19 @@ export default function Painel() {
   }
 
   function limparGaleria() {
+    try { porta.current?.postMessage({ acao: 'limpar', contexto: contextoAtual.current, ids: midias.map(item => item.id) }) } catch {}
     if (abaAtual.current !== undefined) memorias.current.delete(abaAtual.current)
     definirMidias([])
     definirSelecionadas([])
     definirFalhas([])
     definirPrevia(null)
-    definirAviso('Galeria limpa.')
+    definirAviso('Galeria limpa. Navegue ou atualize para capturar novamente.')
     definirConfiguracoes(false)
   }
 
   function atualizar() {
     if (!porta.current) { definirAviso('Abra ou atualize uma página do Instagram.'); return }
-    try { porta.current.postMessage({ acao: 'atualizar' }); definirAviso('Galeria atualizada.') }
+    try { porta.current.postMessage({ acao: 'atualizar' }); definirFalhas([]); definirAviso('Galeria atualizada.') }
     catch { definirAviso('Atualize a página do Instagram.') }
   }
 
@@ -196,7 +220,8 @@ export default function Painel() {
       <button className="limpar-galeria" onClick={limparGaleria}><Trash2 size={16}/> Limpar galeria</button>
     </section>}
     <nav className="filtros" aria-label="Filtrar mídias">{filtros.map(item => <button key={item} aria-pressed={filtro === item} onClick={() => definirFiltro(item)}>{item}</button>)}</nav>
-    <div className="barra"><h2>Galeria de mídias</h2><div className="acoes">
+    <div className="barra"><div className="titulo-galeria"><h2>Galeria de mídias</h2>{tituloContexto && <small title={tituloContexto}>{tituloContexto}</small>}</div><div className="acoes">
+      <button className="icone" title="Limpar galeria" aria-label="Limpar galeria" disabled={!midias.length} onClick={limparGaleria}><Trash2 size={17}/></button>
       <button className="icone" title="Atualizar galeria" aria-label="Atualizar galeria" onClick={atualizar}><RefreshCw size={17}/></button>
       <div className="modos"><button className="icone" aria-label="Visualização em grade" aria-pressed={modo === 'grade'} onClick={() => alterarModo('grade')}><LayoutGrid size={16}/></button><button className="icone" aria-label="Visualização em lista" aria-pressed={modo === 'lista'} onClick={() => alterarModo('lista')}><List size={18}/></button></div>
     </div></div>
@@ -221,7 +246,7 @@ export default function Painel() {
     </main>
     <section className="controles">
       {aviso && <div className="aviso" role="status">{aviso}<button className="icone" aria-label="Dispensar mensagem" onClick={() => definirAviso('')}><X size={14}/></button></div>}
-      <div className="selecao"><span>{escolhidas.length} {escolhidas.length === 1 ? 'selecionada' : 'selecionadas'}</span><div><button disabled={!escolhidas.length} onClick={() => definirSelecionadas([])}>Limpar</button><button disabled={!visiveis.length} onClick={() => definirSelecionadas(lista => [...new Set([...lista, ...visiveis.map(item => item.id)])])}>Selecionar todas</button></div></div>
+      <div className="selecao"><span>{escolhidas.length} {escolhidas.length === 1 ? 'selecionada' : 'selecionadas'}</span><div><button disabled={!escolhidas.length} onClick={() => definirSelecionadas([])}>Limpar seleção</button><button disabled={!visiveis.length} onClick={() => definirSelecionadas(lista => [...new Set([...lista, ...visiveis.map(item => item.id)])])}>Selecionar todas</button></div></div>
       {ocupado && <button className="cancelar" onClick={() => downloadAtual.current?.abort()}><X size={15}/> Cancelar download</button>}
       <button className="baixar" disabled={!escolhidas.length || ocupado} onClick={() => void iniciarDownload(escolhidas)}><Download size={18}/>{ocupado ? 'Preparando download…' : 'Baixar mídias selecionadas'}{!ocupado && escolhidas.length > 0 && <span>{escolhidas.length}</span>}</button>
     </section>

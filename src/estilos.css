@@ -81,3 +81,5 @@ dialog::backdrop{background:#1118}
 .expandir{opacity:1}
 @media(min-width:520px){.grade{grid-template-columns:repeat(auto-fill,minmax(135px,1fr))}}
 @media(forced-colors:active){.marcado .miniatura{outline:2px solid Highlight}.filtros button[aria-pressed=true],.icone[aria-pressed=true]{outline:1px solid Highlight}}
+
+.titulo-galeria{min-width:0;flex:1}.titulo-galeria small{display:block;color:var(--muted);font-size:11px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;margin-top:3px}.acoes{flex-shrink:0}

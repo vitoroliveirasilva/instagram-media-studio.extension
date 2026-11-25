@@ -1,6 +1,6 @@
 import type { Midia, Origem } from './tipos'
 
-export const LIMITE_GALERIA = 1000
+export const LIMITE_GALERIA = 10000
 const origens = new Set<Origem>(['Stories', 'Destaques', 'Posts', 'Reels'])
 const extensoes: Record<string, string> = { 'image/jpeg': 'jpg', 'image/png': 'png', 'image/webp': 'webp', 'image/avif': 'avif', 'image/gif': 'gif', 'video/mp4': 'mp4', 'video/webm': 'webm', 'video/quicktime': 'mov' }
 

@@ -32,7 +32,7 @@ describe('Galeria de mídias', () => {
   it('limita a galeria e a quantidade por mensagem', () => {
     let lista = reunir([], Array.from({ length: 151 }, (_, i) => ({ ...exemplo, url: 'https://cdninstagram.com/a/' + i + '.jpg' })))
     expect(lista).toHaveLength(150)
-    for (let lote = 1; lote <= 7; lote++) lista = reunir(lista, Array.from({ length: 150 }, (_, i) => ({ ...exemplo, url: 'https://cdninstagram.com/a/' + (lote * 150 + i) + '.jpg' })))
+    for (let lote = 1; lote <= 67; lote++) lista = reunir(lista, Array.from({ length: 150 }, (_, i) => ({ ...exemplo, url: 'https://cdninstagram.com/a/' + (lote * 150 + i) + '.jpg' })))
     expect(lista).toHaveLength(LIMITE_GALERIA)
   })
   it('gera nome de arquivo com MIME real', () => {

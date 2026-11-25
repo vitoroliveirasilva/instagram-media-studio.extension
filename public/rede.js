@@ -3,6 +3,7 @@
   let geracao = 0
   const eventoControle = 'ims-controle-captura'
   const eventoMidias = 'ims-midias-carregadas'
+  const identificar = globalThis.IMSContexto.identificar
 
   document.addEventListener(eventoControle, evento => {
     ativo = evento.detail === true
@@ -33,40 +34,61 @@
   }
 
   function extrair(dados, pagina) {
-    const resultado = []
+    const contexto = identificar(pagina)
     const visitados = new WeakSet()
     const caminho = new URL(pagina).pathname
-    const origemPagina = caminho.startsWith('/stories/highlights/') ? 'Destaques' : caminho.startsWith('/stories/') ? 'Stories' : /^\/reels?(\/|$)/.test(caminho) ? 'Reels' : 'Posts'
-    const pilha = [{ item: dados, origem: origemPagina }]
+    const idStory = caminho.split('/').filter(Boolean)[2]
+    const pilha = [{ item: dados, usuario: '', publicacao: '', destaque: '', historia: false }]
+    let lote = []
     let total = 0
-    while (pilha.length && total++ < 20000 && resultado.length < 150) {
-      const { item, origem } = pilha.pop()
+    function emitir() {
+      if (!lote.length) return
+      document.dispatchEvent(new CustomEvent(eventoMidias, { detail: JSON.stringify({ contexto: contexto.chave, midias: lote }) }))
+      lote = []
+    }
+    while (pilha.length && total++ < 50000) {
+      const { item, usuario, publicacao, destaque, historia } = pilha.pop()
       if (!item || typeof item !== 'object' || visitados.has(item)) continue
       visitados.add(item)
       if (Array.isArray(item)) {
-        for (let indice = Math.min(item.length, 2000) - 1; indice >= 0; indice--) pilha.push({ item: item[indice], origem })
+        for (let indice = Math.min(item.length, 5000) - 1; indice >= 0 && pilha.length < 50000; indice--) pilha.push({ item: item[indice], usuario, publicacao, destaque, historia })
         continue
       }
-      const imagem = melhor(item.image_versions2?.candidates)
-      const video = melhor(item.video_versions)
-      const midia = video || imagem
-      const categoria = item.product_type === 'clips' ? 'Reels' : item.product_type === 'story' ? (origemPagina === 'Destaques' ? 'Destaques' : 'Stories') : origem
-      if (midia && !Array.isArray(item.carousel_media) && (item.media_type === 1 || item.media_type === 2 || item.__typename?.includes?.('Media'))) {
-        if (item.media_type !== 2 || video) resultado.push({ url: midia.url, miniatura: imagem?.url || '', tipo: video ? 'video' : 'imagem', origem: categoria, largura: Number(midia.width) || 0, altura: Number(midia.height) || 0 })
+      const nome = [item.user?.username, item.owner?.username, item.username].find(valor => typeof valor === 'string' && /^[a-zA-Z0-9_.]{1,30}$/.test(valor))
+      const autor = nome?.toLowerCase() || usuario
+      const codigo = [item.code, item.shortcode].find(valor => typeof valor === 'string')
+      const grupo = publicacao || codigo
+      const idDestaque = String(item.id || item.pk || '').match(/^highlight:(\d+)$/)?.[1]
+      const grupoDestaque = idDestaque || destaque
+      const ehHistoria = historia || item.product_type === 'story' || !!idDestaque || item.reel_type === 'user_reel' || item.reel_type === 'highlight_reel'
+      const id = String(item.pk || item.id || '').split('_')[0]
+      const pertence = contexto.tipo === 'stories' ? (autor === contexto.alvo && (ehHistoria || (idStory && id === idStory)))
+        : contexto.tipo === 'destaque' ? grupoDestaque === contexto.alvo
+        : contexto.tipo === 'publicacao' ? grupo === contexto.alvo && !ehHistoria
+        : contexto.tipo === 'perfil' ? autor === contexto.alvo && !ehHistoria
+        : false
+      if (pertence) {
+        const imagem = melhor(item.image_versions2?.candidates)
+        const video = melhor(item.video_versions)
+        const midia = video || imagem
+        if (midia && !Array.isArray(item.carousel_media) && (item.media_type === 1 || item.media_type === 2 || item.__typename?.includes?.('Media')) && (item.media_type !== 2 || video)) {
+          const origem = contexto.tipo === 'stories' ? 'Stories' : contexto.tipo === 'destaque' ? 'Destaques' : item.product_type === 'clips' || caminho.startsWith('/reel/') ? 'Reels' : 'Posts'
+          lote.push({ url: midia.url, miniatura: imagem?.url || '', tipo: video ? 'video' : 'imagem', origem, largura: Number(midia.width) || 0, altura: Number(midia.height) || 0 })
+          if (lote.length >= 100) emitir()
+        }
       }
       for (const [chave, filho] of Object.entries(item)) {
-        if (['image_versions2','video_versions','user','owner','caption','comments','profile_pic_url'].includes(chave)) continue
-        const proxima = /highlight/i.test(chave) ? 'Destaques' : /stories|reel_media/i.test(chave) ? (origemPagina === 'Destaques' ? 'Destaques' : 'Stories') : categoria
-        if (filho && typeof filho === 'object' && pilha.length < 20000) pilha.push({ item: filho, origem: proxima })
+        if (['image_versions2','video_versions','user','owner','caption','comments','profile_pic_url','suggested_users','suggested_posts'].includes(chave)) continue
+        if (filho && typeof filho === 'object' && pilha.length < 50000) pilha.push({ item: filho, usuario: autor, publicacao: chave === 'carousel_media' ? grupo : '', destaque: grupoDestaque, historia: ehHistoria || /stories|reels_media|reel_media|highlight/i.test(chave) })
       }
     }
-    if (resultado.length) document.dispatchEvent(new CustomEvent(eventoMidias, { detail: JSON.stringify({ pagina, midias: resultado }) }))
+    emitir()
   }
 
   function processar(texto, pagina, versao) {
-    if (!ativo || versao !== geracao || location.href !== pagina || typeof texto !== 'string' || texto.length > 5000000) return
+    if (!ativo || versao !== geracao || identificar(location.href).chave !== identificar(pagina).chave || typeof texto !== 'string' || texto.length > 5000000) return
     try {
-      extrair(JSON.parse(texto.replace(/^for \(;;\);/, '')), pagina)
+      extrair(JSON.parse(texto.replace(/^for \(;;\);/, '')), location.href)
     } catch {}
   }
 
@@ -116,9 +138,9 @@
       const pagina = location.href
       const versao = geracao
       this.addEventListener('load', () => {
-        if (!ativo || versao !== geracao || pagina !== location.href || this.status < 200 || this.status >= 300) return
+        if (!ativo || versao !== geracao || identificar(pagina).chave !== identificar(location.href).chave || this.status < 200 || this.status >= 300) return
         try {
-          if (this.responseType === 'json') extrair(this.response, pagina)
+          if (this.responseType === 'json') extrair(this.response, location.href)
           else if (!this.responseType || this.responseType === 'text') processar(this.responseText, pagina, versao)
         } catch {}
       }, { once: true })

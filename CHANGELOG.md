@@ -4,6 +4,13 @@
 
 O histórico registra funcionalidades e alterações relevantes do projeto. Os itens descrevem mudanças implementadas, não certificam que todos os cenários foram homologados.
 
+## 0.3.0 — em desenvolvimento
+
+- Galeria contextual por perfil, sequência de Stories, destaque e publicação.
+- Captura de respostas filtrada por perfil ou publicação identificável, com emissão em lotes.
+- Limpeza acessível na barra da galeria, com supressão dos itens já capturados até nova atualização ou mudança de contexto.
+- Limite de galeria ampliado para 10.000 itens; homologação real pendente.
+
 ## Não publicado
 
 ### Documentação
