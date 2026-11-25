@@ -185,3 +185,14 @@ test('captura somente a foto de perfil correspondente ao contexto aberto', async
   assert.equal(lista[0].origem, 'Perfil')
   assert.equal(lista[0].url, foto + '?hd')
 })
+
+
+test('aceita vídeo de publicação aberta durante resposta iniciada no perfil', async () => {
+  const ambiente = preparar({ items: [{ shortcode: 'ABC', __typename: 'GraphVideo', video_url: video }, { shortcode: 'XYZ', __typename: 'GraphVideo', video_url: video + '?outra' }] }, 'https://www.instagram.com/exemplo/')
+  ambiente.ativar(true)
+  const resposta = ambiente.janela.fetch(consulta)
+  ambiente.navegar('https://www.instagram.com/p/ABC/')
+  await resposta
+  await aguardar()
+  assert.deepEqual(capturas(ambiente).map(m => m.url), [video])
+})

@@ -137,14 +137,18 @@
     const anterior = identificar(pagina)
     const atual = identificar(location.href)
     if (anterior.chave === atual.chave) return true
-    return anterior.tipo === 'perfil' && atual.tipo === 'stories' && anterior.alvo === atual.alvo
+    return anterior.tipo === 'perfil' && ((atual.tipo === 'stories' && anterior.alvo === atual.alvo) || atual.tipo === 'publicacao')
   }
 
   function processar(texto, pagina, versao) {
     if (!ativo || versao !== geracao || !contextoCompativel(pagina) || typeof texto !== 'string' || texto.length > 5000000) return
     try {
       extrair(JSON.parse(texto.replace(/^for \(;;\);/, '')), location.href)
-    } catch {}
+    } catch {
+      for (const linha of texto.split(/\r?\n/).slice(0, 1000)) {
+        try { extrair(JSON.parse(linha.trim().replace(/^for \(;;\);/, '')), location.href) } catch {}
+      }
+    }
   }
 
   async function lerResposta(resposta) {
@@ -175,7 +179,7 @@
     const observar = ativo && rotaValida(args[0] instanceof Request ? args[0].url : args[0])
     const resposta = Reflect.apply(buscarOriginal, this, args)
     if (observar) resposta.then(retorno => {
-      if (!ativo || versao !== geracao || !retorno.ok || !retorno.headers.get('content-type')?.includes('json') || Number(retorno.headers.get('content-length')) > 5000000) return
+      if (!ativo || versao !== geracao || !retorno.ok || !/(json|text\/plain)/i.test(retorno.headers.get('content-type') || '') || Number(retorno.headers.get('content-length')) > 5000000) return
       lerResposta(retorno.clone()).then(texto => processar(texto, pagina, versao)).catch(() => {})
     }).catch(() => {})
     return resposta

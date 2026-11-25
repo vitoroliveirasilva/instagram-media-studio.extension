@@ -24,6 +24,7 @@ export default function Painel() {
   const contextos = useRef(new Map<number, string>())
   const contextoAtual = useRef('')
   const [tituloContexto, definirTituloContexto] = useState('')
+  const [videoSemUrl, definirVideoSemUrl] = useState(false)
   const dialogo = useRef<HTMLDialogElement>(null)
   const downloadAtual = useRef<AbortController | null>(null)
   const janelaAtual = useRef<number | undefined>(undefined)
@@ -56,6 +57,7 @@ export default function Painel() {
           abaAtual.current = aba?.id
           contextoAtual.current = ''
           definirTituloContexto('')
+          definirVideoSemUrl(false)
           downloadAtual.current?.abort()
           definirSelecionadas([])
           definirPrevia(null)
@@ -92,6 +94,7 @@ export default function Painel() {
               definirFalhas([])
               definirPrevia(null)
               definirFiltro('Todas')
+              definirVideoSemUrl(false)
               definirAviso('')
               downloadAtual.current?.abort()
             } else definirMidias(memorias.current.get(id) || [])
@@ -103,6 +106,10 @@ export default function Painel() {
             definirSelecionadas([])
             definirFalhas([])
             definirPrevia(null)
+            return
+          }
+          if (mensagem?.acao === 'video-sem-url' && mensagem.contexto === contextoAtual.current) {
+            definirVideoSemUrl(true)
             return
           }
           if (!Array.isArray(mensagem?.midias) || mensagem.contexto !== contextoAtual.current) return
@@ -253,6 +260,7 @@ export default function Painel() {
       })}</div>}
     </main>
     <section className="controles">
+      {videoSemUrl && !midias.some(item => item.tipo === 'video') && !aviso && <div className="aviso" role="status">Vídeo detectado, mas nenhum arquivo direto completo foi identificado. Reproduza o vídeo e tente novamente.</div>}
       {aviso && <div className="aviso" role="status">{aviso}<button className="icone" aria-label="Dispensar mensagem" onClick={() => definirAviso('')}><X size={14}/></button></div>}
       <div className="selecao"><span>{escolhidas.length} {escolhidas.length === 1 ? 'selecionada' : 'selecionadas'}</span><div><button disabled={!escolhidas.length} onClick={() => definirSelecionadas([])}>Limpar seleção</button><button disabled={!visiveis.length} onClick={() => definirSelecionadas(lista => [...new Set([...lista, ...visiveis.filter(item => filtro === 'Perfil' || item.origem !== 'Perfil').map(item => item.id)])])}>Selecionar todas</button></div></div>
       {ocupado && <button className="cancelar" onClick={() => downloadAtual.current?.abort()}><X size={15}/> Cancelar download</button>}

@@ -97,12 +97,14 @@
   function coletarPerfil() {
     if (contexto.tipo !== 'perfil') return
     const cabecalho = document.querySelector('main header') || document.querySelector('main [role="banner"]')
-    if (!cabecalho) return
-    const imagens = [...cabecalho.querySelectorAll('img')].filter(img => {
+    const raiz = cabecalho || document.querySelector('main')
+    if (!raiz) return
+    const imagens = [...raiz.querySelectorAll('img')].filter(img => {
       const alt = (img.alt || '').toLowerCase()
-      return imagemDireta(img) && (alt.includes(contexto.alvo) || /profile picture|foto (de|do) perfil|imagem (de|do) perfil/i.test(alt))
+      const nomes = alt.match(/[a-z0-9_.]+/g) || []
+      return imagemDireta(img) && /profile picture|foto (de|do) perfil|imagem (de|do) perfil/i.test(alt) && nomes.includes(contexto.alvo)
     })
-    const foto = imagens.find(img => (img.alt || '').toLowerCase().includes(contexto.alvo)) || imagens[0]
+    const foto = imagens[0]
     if (!foto) return
     const url = imagemDireta(foto)
     publicar([{ url, miniatura: url, tipo: 'imagem', origem: 'Perfil', largura: foto.naturalWidth, altura: foto.naturalHeight }])
@@ -133,6 +135,11 @@
     const lista = [...elementos]
     const videos = lista.filter(elemento => elemento instanceof HTMLVideoElement && visivel(elemento))
     const capas = new Set(videos.map(elemento => validarUrl(elemento.poster)).filter(Boolean))
+    if (videos.length && !videos.some(elemento => videoDireto(elemento))) {
+      for (const porta of portas) {
+        try { porta.postMessage({ acao: 'video-sem-url', contexto: contexto.chave }) } catch {}
+      }
+    }
     for (const elemento of lista) {
       if (midias.length >= 100) publicar(midias.splice(0))
       if (!visivel(elemento)) continue
