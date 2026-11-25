@@ -4,6 +4,13 @@
 
 O histórico registra funcionalidades e alterações relevantes do projeto. Os itens descrevem mudanças implementadas, não certificam que todos os cenários foram homologados.
 
+## 0.3.3 — em desenvolvimento
+
+- Reconhecimento de identificadores de destaques em conjuntos e chaves de respostas, inclusive carregamentos iniciados no perfil.
+- Suporte às rotas alternativas de Reels e a novos campos de vídeo e foto de perfil.
+- Recuperação da foto de perfil pelo cabeçalho quando a identificação é inequívoca.
+- Diagnóstico de captura opcional, com contagens técnicas sem URLs, nomes de perfis ou credenciais.
+
 ## 0.3.2 — em desenvolvimento
 
 - Leitura limitada de metadados JSON já presentes na página, sem consultas adicionais à API.

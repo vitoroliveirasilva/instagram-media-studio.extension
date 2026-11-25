@@ -74,3 +74,7 @@ Ao abrir um perfil, a foto de perfil pode aparecer na categoria Perfil, com sele
 ## Resolução da foto e arquivos de vídeo (0.3.2)
 
 A extensão considera dados JSON já presentes na página, além das respostas elegíveis durante a navegação. A categoria Perfil prioriza versões HD declaradas pelo Instagram sem estimar artificialmente as dimensões. Quando só há miniatura disponível, a resolução permanece limitada à imagem fornecida. Arquivos de vídeo completos com URL direta podem ser identificados em mais estruturas; não há gravação da tela, reconstrução de fluxos segmentados ou contorno de proteção. A homologação funcional permanece necessária.
+
+## Diagnóstico de captura (0.3.3)
+
+Em Configurações, clique em Gerar diagnóstico de captura enquanto o conteúdo problemático está aberto. Copie o resultado para relatar um erro. O relatório contém somente o tipo de contexto e contagens de mídias e estruturas técnicas; não contém URLs, nomes de perfil, cookies, tokens ou conteúdo de respostas. Os recursos recentes são contados na aba e podem incluir pré-carregamento, portanto não provam que um segmento pertence ao vídeo atual. A extensão não remonta fluxos segmentados nem contorna proteção.

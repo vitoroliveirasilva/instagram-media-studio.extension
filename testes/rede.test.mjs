@@ -239,3 +239,47 @@ test('reconhece o Story atual pelo identificador quando a resposta não contém 
   await aguardar()
   assert.deepEqual(capturas(ambiente).map(m => m.url), [video])
 })
+
+
+test('captura vídeo de destaque identificado pela chave do conjunto', async () => {
+  const ambiente = preparar({ reels: { 'highlight:456': { items: [{ media_type: 2, video_versions: [{ url: video }] }] }, 'highlight:999': { items: [{ media_type: 2, video_url: video + '?outro' }] } } }, 'https://www.instagram.com/stories/highlights/456/')
+  ambiente.ativar(true)
+  await ambiente.janela.fetch(consulta)
+  await aguardar()
+  assert.deepEqual(capturas(ambiente).map(m => [m.origem, m.url]), [['Destaques',video]])
+})
+
+test('captura vídeo de destaque com identificador numérico e tipo declarado', async () => {
+  const ambiente = preparar({ reels_media: [{ id: '456', reel_type: 'highlight_reel', items: [{ media_type: 2, video_url: video }] }] }, 'https://www.instagram.com/stories/highlights/456/')
+  ambiente.ativar(true)
+  await ambiente.janela.fetch(consulta)
+  await aguardar()
+  assert.equal(capturas(ambiente)[0].url, video)
+})
+
+test('aceita dados de destaque carregados durante a saída do perfil', async () => {
+  const ambiente = preparar({ reels_media: [{ id: 'highlight:456', items: [{ media_type: 2, video_url: video }] }] }, 'https://www.instagram.com/exemplo/')
+  ambiente.ativar(true)
+  const resposta = ambiente.janela.fetch(consulta)
+  ambiente.navegar('https://www.instagram.com/stories/highlights/456/')
+  await resposta
+  await aguardar()
+  assert.equal(capturas(ambiente)[0].url, video)
+})
+
+test('reconhece a rota reels no plural', async () => {
+  const ambiente = preparar({ shortcode: 'ABC', media_type: 2, video_url: video }, 'https://www.instagram.com/reels/ABC/')
+  ambiente.ativar(true)
+  await ambiente.janela.fetch(consulta)
+  await aguardar()
+  assert.equal(capturas(ambiente)[0].origem, 'Reels')
+})
+
+test('reconhece foto de perfil com campo uri sem inventar qualidade HD', async () => {
+  const ambiente = preparar({ user: { username: 'exemplo', profile_picture: { uri: foto, width: 150, height: 150 } } }, 'https://www.instagram.com/exemplo/')
+  ambiente.ativar(true)
+  await ambiente.janela.fetch(consulta)
+  await aguardar()
+  assert.equal(capturas(ambiente)[0].qualidadePerfil, 1)
+  assert.equal(capturas(ambiente)[0].url, foto)
+})

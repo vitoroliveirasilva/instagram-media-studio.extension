@@ -25,6 +25,7 @@ export default function Painel() {
   const contextoAtual = useRef('')
   const [tituloContexto, definirTituloContexto] = useState('')
   const [videoSemUrl, definirVideoSemUrl] = useState(false)
+  const [diagnostico, definirDiagnostico] = useState('')
   const dialogo = useRef<HTMLDialogElement>(null)
   const downloadAtual = useRef<AbortController | null>(null)
   const janelaAtual = useRef<number | undefined>(undefined)
@@ -75,6 +76,10 @@ export default function Painel() {
         porta.current = atual
         atual.onMessage.addListener(mensagem => {
           if (porta.current !== atual) return
+          if (mensagem?.acao === 'diagnostico') {
+            definirDiagnostico(JSON.stringify(mensagem.dados, null, 2))
+            return
+          }
           if (mensagem?.acao === 'pronto') {
             clearTimeout(prazo)
             definirConectado(true)
@@ -95,6 +100,7 @@ export default function Painel() {
               definirPrevia(null)
               definirFiltro('Todas')
               definirVideoSemUrl(false)
+              definirDiagnostico('')
               definirAviso('')
               downloadAtual.current?.abort()
             } else definirMidias(memorias.current.get(id) || [])
@@ -233,6 +239,8 @@ export default function Painel() {
       <div className="config-titulo"><strong>Aparência</strong><button className="icone" aria-label="Fechar configurações" onClick={() => definirConfiguracoes(false)}><X size={16}/></button></div>
       <div className="temas">{([{ valor: 'sistema', texto: 'Sistema', Icone: Monitor }, { valor: 'claro', texto: 'Claro', Icone: Sun }, { valor: 'escuro', texto: 'Escuro', Icone: Moon }] as const).map(({valor,texto,Icone}) => <button key={valor} aria-pressed={tema === valor} onClick={() => alterarTema(valor)}><Icone size={16}/>{texto}</button>)}</div>
       <button className="limpar-galeria" onClick={limparGaleria}><Trash2 size={16}/> Limpar galeria</button>
+      <button className="limpar-galeria" disabled={!conectado} onClick={() => { try { porta.current?.postMessage({ acao: 'diagnostico' }) } catch { definirAviso('Não foi possível gerar o diagnóstico.') } }}>Gerar diagnóstico de captura</button>
+      {diagnostico && <div className="diagnostico"><p>Somente contagens técnicas, sem URLs, nomes de perfil ou credenciais.</p><textarea aria-label="Diagnóstico de captura" readOnly value={diagnostico} onFocus={evento => evento.currentTarget.select()}/><button className="limpar-galeria" onClick={() => void navigator.clipboard.writeText(diagnostico).then(() => definirAviso('Diagnóstico copiado.')).catch(() => definirAviso('Selecione e copie o diagnóstico manualmente.'))}>Copiar diagnóstico</button></div>}
     </section>}
     <nav className="filtros" aria-label="Filtrar mídias">{filtros.filter(item => item !== 'Perfil' || midias.some(midia => midia.origem === 'Perfil') || contextoAtual.current.startsWith('perfil:')).map(item => <button key={item} aria-pressed={filtro === item} onClick={() => definirFiltro(item)}>{item}</button>)}</nav>
     <div className="barra"><div className="titulo-galeria"><h2>Galeria de mídias</h2>{tituloContexto && <small title={tituloContexto}>{tituloContexto}</small>}</div><div className="acoes">

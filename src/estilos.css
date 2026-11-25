@@ -83,3 +83,5 @@ dialog::backdrop{background:#1118}
 @media(forced-colors:active){.marcado .miniatura{outline:2px solid Highlight}.filtros button[aria-pressed=true],.icone[aria-pressed=true]{outline:1px solid Highlight}}
 
 .titulo-galeria{min-width:0;flex:1}.titulo-galeria small{display:block;color:var(--muted);font-size:11px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;margin-top:3px}.acoes{flex-shrink:0}
+
+.diagnostico{display:grid;gap:8px;font-size:12px}.diagnostico textarea{width:100%;min-height:140px;resize:vertical;font-family:monospace;color:inherit;background:transparent;border:1px solid currentColor;border-radius:8px;padding:8px}

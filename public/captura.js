@@ -12,6 +12,7 @@
   let ultimaRota = ''
   let aguardarAte = 0
   const ignorados = new Set()
+  let contagensRede = {}
 
   function identidade(midia) {
     const caminho = new URL(midia.url).pathname
@@ -24,6 +25,7 @@
     const atual = identificar(location.href)
     if (contexto?.chave === atual.chave) return false
     contexto = atual
+    contagensRede = {}
     enviados.clear()
     ignorados.clear()
     aguardarAte = performance.now() + 350
@@ -99,12 +101,16 @@
     const cabecalho = document.querySelector('main header') || document.querySelector('main [role="banner"]')
     const raiz = cabecalho || document.querySelector('main')
     if (!raiz) return
-    const imagens = [...raiz.querySelectorAll('img')].filter(img => {
-      const alt = (img.alt || '').toLowerCase()
-      const nomes = alt.match(/[a-z0-9_.]+/g) || []
-      return imagemDireta(img) && /profile picture|foto (de|do) perfil|imagem (de|do) perfil/i.test(alt) && nomes.includes(contexto.alvo)
-    })
-    const foto = imagens[0]
+    const imagens = [...raiz.querySelectorAll('img')].filter(img => imagemDireta(img) && !img.closest('nav, [role="navigation"], a[href*="/p/"], a[href*="/reel/"]'))
+    const nomeExato = img => (img.alt || '').toLowerCase().match(/[a-z0-9_.]+/g)?.includes(contexto.alvo)
+    const rotuloPerfil = img => /profile picture|profile photo|foto (de|do) perfil|imagem (de|do) perfil/i.test(img.alt || '')
+    const explicitas = imagens.filter(img => nomeExato(img) && rotuloPerfil(img))
+    const genericas = cabecalho ? imagens.filter(rotuloPerfil) : []
+    const candidatas = cabecalho ? imagens.filter(img => {
+      const caixa = img.getBoundingClientRect()
+      return caixa.width >= 70 && caixa.height >= 70 && Math.abs(caixa.width - caixa.height) < 12 && !img.closest('a[href*="/stories/highlights/"]')
+    }) : []
+    const foto = explicitas[0] || (genericas.length === 1 ? genericas[0] : null) || (candidatas.length === 1 ? candidatas[0] : null)
     if (!foto) return
     const url = imagemDireta(foto)
     const atual = validarUrl(foto.currentSrc || foto.src)
@@ -165,6 +171,29 @@
     temporizador = setTimeout(() => { temporizador = undefined; coletar() }, Math.max(100, 250 - (performance.now() - ultimaColeta)))
   }
 
+  document.addEventListener('ims-diagnostico-resposta', evento => {
+    try {
+      const dados = JSON.parse(evento.detail)
+      contagensRede = Object.fromEntries(['respostas','objetos','candidatosVideo','videosContexto','manifestos','urlsSegmentadas','fotosPerfil','fotosHd','videosEmitidos'].map(chave => [chave, Math.min(10000000, Math.max(0, Number(dados[chave]) || 0))]))
+    } catch {}
+  })
+
+  function diagnosticar() {
+    sincronizar()
+    document.dispatchEvent(new CustomEvent('ims-diagnostico-rede'))
+    const videos = [...document.querySelectorAll('video')].filter(visivel)
+    const recursos = performance.getEntriesByType('resource').slice(-500)
+    const contagem = { mp4: 0, manifestos: 0, segmentos: 0 }
+    for (const recurso of recursos) {
+      if (!validarUrl(recurso.name)) continue
+      const url = new URL(recurso.name)
+      if (/\.(mpd|m3u8)$/i.test(url.pathname)) contagem.manifestos++
+      else if (url.searchParams.has('bytestart') || url.searchParams.has('byteend') || /\.(m4s|ts)$/i.test(url.pathname)) contagem.segmentos++
+      else if (/\.mp4$/i.test(url.pathname)) contagem.mp4++
+    }
+    return { versao: '0.3.3', tipoContexto: contexto.tipo, videosVisiveis: videos.length, videosComBlob: videos.filter(v => (v.currentSrc || v.src || '').startsWith('blob:')).length, videosComUrlDireta: videos.filter(v => videoDireto(v)).length, fotosPerfilCapturadas: enviados.has('imagem:perfil') ? 1 : 0, recursosRecentesDaAba: contagem, rede: contagensRede }
+  }
+
   document.addEventListener(eventoMidias, evento => {
     if (!portas.size || typeof evento.detail !== 'string' || evento.detail.length > 500000) return
     try {
@@ -214,6 +243,7 @@
     })
     porta.onMessage.addListener(mensagem => {
       if (mensagem?.acao === 'atualizar') { ignorados.clear(); enviados.clear(); coletar() }
+      if (mensagem?.acao === 'diagnostico') porta.postMessage({ acao: 'diagnostico', dados: diagnosticar() })
       if (mensagem?.acao === 'limpar' && mensagem.contexto === contexto?.chave) {
         for (const chave of enviados.keys()) ignorados.add(chave)
         if (Array.isArray(mensagem.ids)) for (const id of mensagem.ids.slice(0, 10000)) if (typeof id === 'string' && id.length <= 8192) ignorados.add(id)
