@@ -76,3 +76,8 @@ dialog::backdrop{background:#1118}
 @media(max-width:310px){.grade{grid-template-columns:repeat(2,minmax(0,1fr))}.filtros button{padding:7px 5px;font-size:10px}.cabecalho{padding:12px 9px}}
 @media(hover:none){.expandir{opacity:1}}
 @media(prefers-reduced-motion:reduce){*,*::before,*::after{transition:none!important;animation:none!important}}
+
+.cancelar{padding:8px;color:var(--acento);border:1px solid var(--borda);border-radius:8px;font-weight:600}.cancelar:hover{background:var(--acento-suave)}
+.expandir{opacity:1}
+@media(min-width:520px){.grade{grid-template-columns:repeat(auto-fill,minmax(135px,1fr))}}
+@media(forced-colors:active){.marcado .miniatura{outline:2px solid Highlight}.filtros button[aria-pressed=true],.icone[aria-pressed=true]{outline:1px solid Highlight}}

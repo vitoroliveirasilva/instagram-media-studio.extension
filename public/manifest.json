@@ -2,7 +2,7 @@
   "manifest_version": 3,
   "name": "Instagram Media Studio",
   "description": "Visualize e baixe imagens e vídeos carregados durante a navegação no Instagram.",
-  "version": "0.1.0",
+  "version": "0.2.0",
   "minimum_chrome_version": "116",
   "permissions": [
     "sidePanel",
@@ -43,5 +43,8 @@
       ],
       "run_at": "document_idle"
     }
-  ]
+  ],
+  "content_security_policy": {
+    "extension_pages": "script-src 'self'; object-src 'none'; base-uri 'none'; connect-src 'self' https://*.cdninstagram.com https://*.fbcdn.net; img-src 'self' https://*.cdninstagram.com https://*.fbcdn.net; media-src 'self' https://*.cdninstagram.com https://*.fbcdn.net blob:"
+  }
 }

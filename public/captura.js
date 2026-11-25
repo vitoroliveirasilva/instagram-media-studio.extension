@@ -2,13 +2,15 @@
   const portas = new Set()
   let observador
   let temporizador
+  let ultimaColeta = 0
+  const enviados = new Map()
   const eventoControle = 'ims-controle-captura'
   const eventoMidias = 'ims-midias-carregadas'
 
   function validarUrl(valor) {
     try {
       const url = new URL(valor)
-      return url.protocol === 'https:' && !url.username && !url.password && (/(^|\.)cdninstagram\.com$/.test(url.hostname) || /(^|\.)fbcdn\.net$/.test(url.hostname)) ? url.href : ''
+      return url.protocol === 'https:' && !url.username && !url.password && !url.port && (/(^|\.)cdninstagram\.com$/.test(url.hostname) || /(^|\.)fbcdn\.net$/.test(url.hostname)) ? url.href : ''
     } catch {
       return ''
     }
@@ -34,19 +36,30 @@
       if (!url || !['imagem','video'].includes(midia.tipo) || !['Stories','Destaques','Posts','Reels'].includes(midia.origem)) return []
       return [{ url, miniatura: validarUrl(midia.miniatura), tipo: midia.tipo, origem: midia.origem, largura: Math.max(0, Number(midia.largura) || 0), altura: Math.max(0, Number(midia.altura) || 0) }]
     })
-    if (!validas.length) return
+    const novas = validas.filter(midia => {
+      const chave = midia.tipo + ':' + midia.url
+      const qualidade = midia.largura * midia.altura + ':' + midia.miniatura + ':' + midia.origem
+      if (enviados.get(chave) === qualidade) return false
+      enviados.set(chave, qualidade)
+      if (enviados.size > 2500) enviados.delete(enviados.keys().next().value)
+      return true
+    })
+    if (!novas.length) return
     for (const porta of portas) {
-      try { porta.postMessage({ midias: validas }) } catch {}
+      try { porta.postMessage({ midias: novas }) } catch {}
     }
   }
 
   function coletar() {
     if (!portas.size) return
+    ultimaColeta = performance.now()
     const midias = []
     const seletores = 'main img, main video, article img, article video, [role="dialog"] img, [role="dialog"] video'
     const elementos = document.querySelectorAll(location.pathname.startsWith('/stories/') ? 'img, video' : seletores)
     for (const elemento of elementos) {
+      if (midias.length >= 150) break
       if (!visivel(elemento)) continue
+      if (elemento instanceof HTMLImageElement && (elemento.closest('header, nav, [role="navigation"]') || elemento.closest('button')?.getBoundingClientRect().width < 100)) continue
       const video = elemento instanceof HTMLVideoElement
       const largura = video ? elemento.videoWidth : elemento.naturalWidth
       const altura = video ? elemento.videoHeight : elemento.naturalHeight
@@ -60,8 +73,8 @@
   }
 
   function agendar() {
-    clearTimeout(temporizador)
-    temporizador = setTimeout(coletar, 180)
+    if (temporizador !== undefined) return
+    temporizador = setTimeout(() => { temporizador = undefined; coletar() }, Math.max(100, 250 - (performance.now() - ultimaColeta)))
   }
 
   document.addEventListener(eventoMidias, evento => {
@@ -86,6 +99,8 @@
     document.dispatchEvent(new CustomEvent(eventoControle, { detail: false }))
     observador?.disconnect()
     clearTimeout(temporizador)
+    temporizador = undefined
+    enviados.clear()
     window.removeEventListener('scroll', agendar, true)
     document.removeEventListener('load', agendar, true)
     document.removeEventListener('loadedmetadata', agendar, true)
@@ -98,8 +113,9 @@
       portas.delete(porta)
       if (!portas.size) parar()
     })
-    porta.onMessage.addListener(mensagem => { if (mensagem?.acao === 'atualizar') coletar() })
+    porta.onMessage.addListener(mensagem => { if (mensagem?.acao === 'atualizar') { enviados.clear(); coletar() } })
+    porta.postMessage({ acao: 'pronto' })
     if (portas.size === 1) iniciar()
-    else coletar()
+    else { enviados.clear(); coletar() }
   })
 })()

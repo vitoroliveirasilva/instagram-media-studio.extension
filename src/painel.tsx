@@ -22,6 +22,10 @@ export default function Painel() {
   const abaAtual = useRef<number | undefined>(undefined)
   const memorias = useRef(new Map<number, Midia[]>())
   const dialogo = useRef<HTMLDialogElement>(null)
+  const downloadAtual = useRef<AbortController | null>(null)
+  const janelaAtual = useRef<number | undefined>(undefined)
+
+  useEffect(() => () => downloadAtual.current?.abort(), [])
 
   useEffect(() => {
     chrome.storage.local.get(['tema','modo']).then(dados => {
@@ -37,15 +41,17 @@ export default function Painel() {
   useEffect(() => {
     let encerrado = false
     let sequencia = 0
-    let janela: number | undefined
+    let prazo: ReturnType<typeof setTimeout> | undefined
     const conectar = async () => {
       const versao = ++sequencia
       try {
-        const [aba] = await chrome.tabs.query({ active: true, currentWindow: true })
+        if (janelaAtual.current === undefined) janelaAtual.current = (await chrome.windows.getCurrent()).id
+        const [aba] = await chrome.tabs.query({ active: true, ...(janelaAtual.current === undefined ? { currentWindow: true } : { windowId: janelaAtual.current }) })
         if (encerrado || versao !== sequencia) return
-        janela = aba?.windowId
+        clearTimeout(prazo)
         if (abaAtual.current !== aba?.id) {
           abaAtual.current = aba?.id
+          downloadAtual.current?.abort()
           definirSelecionadas([])
           definirPrevia(null)
           definirFalhas([])
@@ -55,33 +61,62 @@ export default function Painel() {
         porta.current = null
         anterior?.disconnect()
         definirConectado(false)
+        definirAviso('')
         if (aba?.id === undefined || !aba.url?.startsWith('https://www.instagram.com/')) return
         const id = aba.id
         const atual = chrome.tabs.connect(id, { name: 'ims-painel', frameId: 0 })
         porta.current = atual
         atual.onMessage.addListener(mensagem => {
-          if (porta.current !== atual || !Array.isArray(mensagem?.midias)) return
+          if (porta.current !== atual) return
+          if (mensagem?.acao === 'pronto') {
+            clearTimeout(prazo)
+            definirConectado(true)
+            definirAviso('')
+            return
+          }
+          if (!Array.isArray(mensagem?.midias)) return
           const novas = reunir(memorias.current.get(id) || [], mensagem.midias)
           memorias.current.set(id, novas)
           definirMidias(novas)
+          definirSelecionadas(lista => lista.filter(chave => novas.some(item => item.id === chave)))
         })
         atual.onDisconnect.addListener(() => {
           const erro = chrome.runtime.lastError
           if (porta.current !== atual) return
+          clearTimeout(prazo)
           porta.current = null
           definirConectado(false)
           if (erro) definirAviso('Atualize a página do Instagram para habilitar a captura.')
         })
-        definirConectado(true)
-        definirAviso('')
-        atual.postMessage({ acao: 'atualizar' })
+        prazo = setTimeout(() => {
+          if (porta.current !== atual) return
+          porta.current = null
+          atual.disconnect()
+          definirConectado(false)
+          definirAviso('Atualize a página do Instagram para habilitar a captura.')
+        }, 4000)
       } catch {
         if (!encerrado) definirAviso('Não foi possível conectar à página. Atualize o Instagram.')
       }
     }
-    const ativada = (info: chrome.tabs.TabActiveInfo) => { if (janela === undefined || info.windowId === janela) void conectar() }
+    const ativada = (info: chrome.tabs.TabActiveInfo) => { if (janelaAtual.current === undefined || info.windowId === janelaAtual.current) void conectar() }
     const atualizada = (id: number, alteracao: chrome.tabs.TabChangeInfo) => {
-      if (id === abaAtual.current && alteracao.status === 'complete') void conectar()
+      if (id !== abaAtual.current) return
+      if (alteracao.status === 'loading') {
+        const anterior = porta.current
+        porta.current = null
+        anterior?.disconnect()
+        clearTimeout(prazo)
+        definirConectado(false)
+        if (alteracao.url && !alteracao.url.startsWith('https://www.instagram.com/')) {
+          memorias.current.delete(id)
+          definirMidias([])
+          definirSelecionadas([])
+          definirPrevia(null)
+          downloadAtual.current?.abort()
+        }
+      }
+      if (alteracao.status === 'complete') void conectar()
     }
     const removida = (id: number) => { memorias.current.delete(id) }
     chrome.tabs.onActivated.addListener(ativada)
@@ -90,6 +125,7 @@ export default function Painel() {
     void conectar()
     return () => {
       encerrado = true
+      clearTimeout(prazo)
       const anterior = porta.current
       porta.current = null
       anterior?.disconnect()
@@ -105,7 +141,8 @@ export default function Painel() {
   }, [previa])
 
   const visiveis = useMemo(() => midias.filter(midia => filtro === 'Todas' || midia.origem === filtro), [midias, filtro])
-  const escolhidas = midias.filter(midia => selecionadas.includes(midia.id))
+  const conjuntoSelecionadas = useMemo(() => new Set(selecionadas), [selecionadas])
+  const escolhidas = useMemo(() => midias.filter(midia => conjuntoSelecionadas.has(midia.id)), [midias, conjuntoSelecionadas])
 
   function alternar(id: string) {
     definirSelecionadas(lista => lista.includes(id) ? lista.filter(item => item !== id) : [...lista, id])
@@ -113,21 +150,23 @@ export default function Painel() {
 
   function alterarModo(valor: 'grade' | 'lista') {
     definirModo(valor)
-    void chrome.storage.local.set({ modo: valor })
+    void chrome.storage.local.set({ modo: valor }).catch(() => definirAviso('Não foi possível salvar a preferência.'))
   }
 
   function alterarTema(valor: Tema) {
     definirTema(valor)
-    void chrome.storage.local.set({ tema: valor })
+    void chrome.storage.local.set({ tema: valor }).catch(() => definirAviso('Não foi possível salvar a preferência.'))
   }
 
   async function iniciarDownload(lista: Midia[]) {
-    if (!lista.length || ocupado) return
+    if (!lista.length || downloadAtual.current) return
+    const controle = new AbortController()
+    downloadAtual.current = controle
     definirOcupado(true)
     definirAviso('')
-    try { await baixar(lista, definirAviso) }
-    catch (erro) { definirAviso(erro instanceof Error ? erro.message : 'Não foi possível baixar as mídias.') }
-    finally { definirOcupado(false) }
+    try { await baixar(lista, definirAviso, controle.signal) }
+    catch (erro) { definirAviso(controle.signal.aborted ? 'Download cancelado.' : erro instanceof Error ? erro.message : 'Não foi possível baixar as mídias.') }
+    finally { downloadAtual.current = null; definirOcupado(false) }
   }
 
   function limparGaleria() {
@@ -163,12 +202,12 @@ export default function Painel() {
     </div></div>
     <main className="rolagem">
       {!visiveis.length ? <div className="vazio"><span><Images size={28}/></span><h3>{conectado ? 'Nenhuma mídia por aqui' : 'Abra o Instagram'}</h3><p>{conectado ? 'Navegue por publicações, Stories ou Reels para preencher sua galeria.' : 'Acesse o Instagram em uma aba para começar. Se já estiver aberto, atualize a página.'}</p></div> : <div className={'galeria ' + modo}>{visiveis.map(midia => {
-        const marcada = selecionadas.includes(midia.id)
+        const marcada = conjuntoSelecionadas.has(midia.id)
         const video = midia.tipo === 'video'
         return <article className={'cartao ' + (marcada ? 'marcado' : '')} key={midia.id}>
           <div className="miniatura">
             <button className="selecionar-midia" aria-label={(marcada ? 'Desmarcar ' : 'Selecionar ') + (video ? 'vídeo' : 'imagem')} aria-pressed={marcada} onClick={() => alternar(midia.id)}>
-              {falhas.includes(midia.id) || (video && !midia.miniatura) ? <span className="placeholder">{video ? <Video size={30}/> : <Image size={30}/>}</span> : <img loading="lazy" referrerPolicy="no-referrer" src={video ? midia.miniatura : midia.url} alt={video ? 'Miniatura do vídeo' : 'Imagem do Instagram'} onError={() => definirFalhas(lista => [...lista, midia.id])}/>}
+              {falhas.includes(midia.id) || (video && !midia.miniatura) ? <span className="placeholder">{video ? <Video size={30}/> : <Image size={30}/>}</span> : <img loading="lazy" referrerPolicy="no-referrer" src={video ? midia.miniatura : midia.url} alt={video ? 'Miniatura do vídeo' : 'Imagem do Instagram'} onError={() => definirFalhas(lista => lista.includes(midia.id) ? lista : [...lista, midia.id])}/>}
               <span className="degrade"/>
               <span className="tipo">{video ? <Video size={14}/> : <Image size={14}/>}</span>
               <span className="check">{marcada && <Check size={14}/>}</span>
@@ -183,10 +222,11 @@ export default function Painel() {
     <section className="controles">
       {aviso && <div className="aviso" role="status">{aviso}<button className="icone" aria-label="Dispensar mensagem" onClick={() => definirAviso('')}><X size={14}/></button></div>}
       <div className="selecao"><span>{escolhidas.length} {escolhidas.length === 1 ? 'selecionada' : 'selecionadas'}</span><div><button disabled={!escolhidas.length} onClick={() => definirSelecionadas([])}>Limpar</button><button disabled={!visiveis.length} onClick={() => definirSelecionadas(lista => [...new Set([...lista, ...visiveis.map(item => item.id)])])}>Selecionar todas</button></div></div>
+      {ocupado && <button className="cancelar" onClick={() => downloadAtual.current?.abort()}><X size={15}/> Cancelar download</button>}
       <button className="baixar" disabled={!escolhidas.length || ocupado} onClick={() => void iniciarDownload(escolhidas)}><Download size={18}/>{ocupado ? 'Preparando download…' : 'Baixar mídias selecionadas'}{!ocupado && escolhidas.length > 0 && <span>{escolhidas.length}</span>}</button>
     </section>
-    <dialog ref={dialogo} onCancel={() => definirPrevia(null)} onClick={evento => { if (evento.target === dialogo.current) definirPrevia(null) }}>
-      {previa && <div className="previa"><div className="previa-cabecalho"><strong>{previa.origem} · {previa.tipo === 'video' ? 'Vídeo' : 'Imagem'}</strong><button className="icone" aria-label="Fechar visualização" onClick={() => definirPrevia(null)}><X size={21}/></button></div>{previa.tipo === 'video' ? <video key={previa.id} src={previa.url} poster={previa.miniatura || undefined} controls playsInline/> : <img src={previa.url} alt="Pré-visualização da mídia" referrerPolicy="no-referrer"/>}<button className="baixar" disabled={ocupado} onClick={() => void iniciarDownload([previa])}><Download size={17}/> Baixar mídia</button></div>}
+    <dialog ref={dialogo} aria-label="Pré-visualização da mídia" onCancel={() => definirPrevia(null)} onClick={evento => { if (evento.target === dialogo.current) definirPrevia(null) }}>
+      {previa && <div className="previa"><div className="previa-cabecalho"><strong>{previa.origem} · {previa.tipo === 'video' ? 'Vídeo' : 'Imagem'}</strong><button className="icone" aria-label="Fechar visualização" onClick={() => definirPrevia(null)}><X size={21}/></button></div>{previa.tipo === 'video' ? <video key={previa.id} src={previa.url} poster={previa.miniatura || undefined} controls playsInline preload="metadata" onError={() => definirAviso('Vídeo indisponível. Abra a publicação novamente.')}/> : <img src={previa.url} alt="Pré-visualização da mídia" referrerPolicy="no-referrer" onError={() => definirAviso('Imagem indisponível. Abra a publicação novamente.')}/>}<button className="baixar" disabled={ocupado} onClick={() => void iniciarDownload([previa])}><Download size={17}/> Baixar mídia</button></div>}
     </dialog>
   </div>
 }

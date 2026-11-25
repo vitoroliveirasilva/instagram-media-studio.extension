@@ -12,7 +12,7 @@
   function urlValida(valor) {
     try {
       const url = new URL(valor)
-      return url.protocol === 'https:' && !url.username && !url.password && (/(^|\.)cdninstagram\.com$/.test(url.hostname) || /(^|\.)fbcdn\.net$/.test(url.hostname))
+      return url.protocol === 'https:' && !url.username && !url.password && !url.port && (/(^|\.)cdninstagram\.com$/.test(url.hostname) || /(^|\.)fbcdn\.net$/.test(url.hostname))
     } catch {
       return false
     }
@@ -35,7 +35,8 @@
   function extrair(dados, pagina) {
     const resultado = []
     const visitados = new WeakSet()
-    const origemPagina = pagina.includes('/stories/highlights/') ? 'Destaques' : pagina.includes('/stories/') ? 'Stories' : /\/reels?\//.test(pagina) ? 'Reels' : 'Posts'
+    const caminho = new URL(pagina).pathname
+    const origemPagina = caminho.startsWith('/stories/highlights/') ? 'Destaques' : caminho.startsWith('/stories/') ? 'Stories' : /^\/reels?(\/|$)/.test(caminho) ? 'Reels' : 'Posts'
     const pilha = [{ item: dados, origem: origemPagina }]
     let total = 0
     while (pilha.length && total++ < 20000 && resultado.length < 150) {
@@ -43,7 +44,7 @@
       if (!item || typeof item !== 'object' || visitados.has(item)) continue
       visitados.add(item)
       if (Array.isArray(item)) {
-        for (const filho of item) pilha.push({ item: filho, origem })
+        for (let indice = Math.min(item.length, 2000) - 1; indice >= 0; indice--) pilha.push({ item: item[indice], origem })
         continue
       }
       const imagem = melhor(item.image_versions2?.candidates)
@@ -56,7 +57,7 @@
       for (const [chave, filho] of Object.entries(item)) {
         if (['image_versions2','video_versions','user','owner','caption','comments','profile_pic_url'].includes(chave)) continue
         const proxima = /highlight/i.test(chave) ? 'Destaques' : /stories|reel_media/i.test(chave) ? (origemPagina === 'Destaques' ? 'Destaques' : 'Stories') : categoria
-        if (filho && typeof filho === 'object') pilha.push({ item: filho, origem: proxima })
+        if (filho && typeof filho === 'object' && pilha.length < 20000) pilha.push({ item: filho, origem: proxima })
       }
     }
     if (resultado.length) document.dispatchEvent(new CustomEvent(eventoMidias, { detail: JSON.stringify({ pagina, midias: resultado }) }))
@@ -69,6 +70,27 @@
     } catch {}
   }
 
+  async function lerResposta(resposta) {
+    const leitor = resposta.body?.getReader()
+    if (!leitor) return ''
+    const decodificador = new TextDecoder()
+    let bytes = 0
+    let texto = ''
+    try {
+      while (ativo) {
+        const { value, done } = await leitor.read()
+        if (done) return texto + decodificador.decode()
+        bytes += value.byteLength
+        if (bytes > 5000000) return ''
+        texto += decodificador.decode(value, { stream: true })
+      }
+      return ''
+    } finally {
+      void leitor.cancel().catch(() => {})
+      leitor.releaseLock()
+    }
+  }
+
   const buscarOriginal = window.fetch
   window.fetch = function (...args) {
     const pagina = location.href
@@ -77,7 +99,7 @@
     const resposta = Reflect.apply(buscarOriginal, this, args)
     if (observar) resposta.then(retorno => {
       if (!ativo || versao !== geracao || !retorno.ok || !retorno.headers.get('content-type')?.includes('json') || Number(retorno.headers.get('content-length')) > 5000000) return
-      retorno.clone().text().then(texto => processar(texto, pagina, versao)).catch(() => {})
+      lerResposta(retorno.clone()).then(texto => processar(texto, pagina, versao)).catch(() => {})
     }).catch(() => {})
     return resposta
   }

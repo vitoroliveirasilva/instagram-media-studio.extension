@@ -1,12 +1,13 @@
 {
   "name": "instagram-media-studio",
-  "version": "0.1.0",
+  "version": "0.2.0",
   "private": true,
   "type": "module",
   "scripts": {
     "dev": "vite",
     "build": "tsc --noEmit && vite build",
-    "test": "vitest run"
+    "test": "vitest run",
+    "verificar": "node --check public/captura.js && node --check public/rede.js && node --check public/servico.js && tsc --noEmit && vitest run"
   },
   "dependencies": {
     "react": "19.1.0",
@@ -25,5 +26,8 @@
     "postcss": "8.5.3",
     "autoprefixer": "10.4.21",
     "vitest": "3.1.4"
+  },
+  "engines": {
+    "node": ">=22 <25"
   }
 }
