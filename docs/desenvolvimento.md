@@ -69,3 +69,7 @@ A branch `dev` é o ambiente de desenvolvimento e homologação. A branch `prod`
 Para uma nova versão, alinhe `package.json` e `public/manifest.json`, atualize o [histórico](../CHANGELOG.md), execute as verificações e valide a extensão no navegador. Não confunda artefato de CI com publicação nas lojas oficiais.
 
 Leia também [contribuição](../CONTRIBUTING.md).
+
+### Primeira distribuição
+
+O job `publicar` é executado apenas na `prod`, após sucesso do job de verificação, em push ou execução manual. Ele publica exclusivamente a versão 0.2.0 como pré-lançamento, com ZIP compilado e checksum SHA-256, sem substituir uma release existente. A publicação exige que o token do workflow tenha permissão de escrita em conteúdo. Versões futuras precisam de um processo de release atualizado e de homologação correspondente.

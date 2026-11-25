@@ -41,3 +41,48 @@ jobs:
           path: dist/
           if-no-files-found: error
           retention-days: 14
+
+  publicar:
+    name: Publicar primeira versão
+    needs: verificar
+    if: github.ref == 'refs/heads/prod' && github.event_name != 'pull_request'
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    permissions:
+      contents: write
+    steps:
+      - name: Obter código
+        uses: actions/checkout@v4
+      - name: Baixar extensão validada
+        uses: actions/download-artifact@v4
+        with:
+          name: instagram-media-studio
+          path: pacote
+      - name: Preparar e publicar versão 0.2.0
+        env:
+          GH_TOKEN: ${{ github.token }}
+          GH_REPO: ${{ github.repository }}
+          COMMIT: ${{ github.sha }}
+        shell: bash
+        run: |
+          set -euo pipefail
+          versao=$(node -p "require('./package.json').version")
+          manifesto=$(node -p "require('./pacote/manifest.json').version")
+          if [ "$versao" != "0.2.0" ]; then
+            echo "Publicação inicial não se aplica a esta versão."
+            exit 0
+          fi
+          test "$versao" = "$manifesto"
+          tag="v$versao"
+          if gh release view "$tag" >/dev/null 2>&1; then
+            echo "A versão já foi publicada."
+            exit 0
+          fi
+          if git ls-remote --exit-code --tags origin "refs/tags/$tag" >/dev/null 2>&1; then
+            git fetch origin "refs/tags/$tag:refs/tags/$tag"
+            test "$(git rev-list -n 1 "$tag")" = "$COMMIT"
+          fi
+          arquivo="instagram-media-studio-$tag.zip"
+          (cd pacote && zip -qr "../$arquivo" .)
+          sha256sum "$arquivo" > "$arquivo.sha256"
+          gh release create "$tag" "$arquivo" "$arquivo.sha256" --target "$COMMIT" --title "Instagram Media Studio $tag" --notes-file docs/releases/v0.2.0.md --prerelease

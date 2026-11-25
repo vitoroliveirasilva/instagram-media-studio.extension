@@ -9,7 +9,7 @@ Extensão de navegador para identificar, visualizar, selecionar e baixar imagens
 ![TypeScript](https://img.shields.io/badge/TypeScript-5.8-3178c6)
 ![Licença](https://img.shields.io/badge/licen%C3%A7a-MIT-555)
 
-> **Estado do projeto:** desenvolvimento e homologação. A versão 0.2.0 está disponível na branch `dev`. A compatibilidade funcional com sessões reais do Instagram ainda precisa ser comprovada. Não se trata de uma publicação oficial nas lojas de extensões.
+> **Estado do projeto:** desenvolvimento e homologação. A versão 0.2.0 é a primeira candidata à distribuição, desenvolvida na branch `dev` e integrada à `prod` por pull request. A compatibilidade funcional com sessões reais do Instagram ainda precisa ser comprovada. Não se trata de uma publicação oficial nas lojas de extensões.
 
 ## Funcionalidades
 
@@ -62,7 +62,7 @@ A extensão pronta para instalação será gerada na pasta `dist/`. Se uma verif
 5. Fixe o ícone da extensão na barra de ferramentas, se desejar.
 6. Abra ou atualize a página do Instagram e clique no ícone da extensão.
 
-Também é possível usar o artefato da [integração contínua](https://github.com/vitoroliveirasilva/instagram-media-studio.extension/actions), caso exista uma execução bem-sucedida para a versão desejada. Consulte o [guia de instalação](docs/instalacao.md).
+Para instalar sem compilar, consulte a [página de releases](https://github.com/vitoroliveirasilva/instagram-media-studio.extension/releases) e utilize o ZIP compilado da versão desejada, se estiver publicado. Também é possível usar o artefato da [integração contínua](https://github.com/vitoroliveirasilva/instagram-media-studio.extension/actions), caso exista uma execução bem-sucedida para a versão desejada. Consulte o [guia de instalação](docs/instalacao.md).
 
 ## Como utilizar
 
