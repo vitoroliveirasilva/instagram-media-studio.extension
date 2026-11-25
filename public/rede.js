@@ -85,8 +85,15 @@
     emitir()
   }
 
+  function contextoCompativel(pagina) {
+    const anterior = identificar(pagina)
+    const atual = identificar(location.href)
+    if (anterior.chave === atual.chave) return true
+    return anterior.tipo === 'perfil' && atual.tipo === 'stories' && anterior.alvo === atual.alvo
+  }
+
   function processar(texto, pagina, versao) {
-    if (!ativo || versao !== geracao || identificar(location.href).chave !== identificar(pagina).chave || typeof texto !== 'string' || texto.length > 5000000) return
+    if (!ativo || versao !== geracao || !contextoCompativel(pagina) || typeof texto !== 'string' || texto.length > 5000000) return
     try {
       extrair(JSON.parse(texto.replace(/^for \(;;\);/, '')), location.href)
     } catch {}
@@ -138,7 +145,7 @@
       const pagina = location.href
       const versao = geracao
       this.addEventListener('load', () => {
-        if (!ativo || versao !== geracao || identificar(pagina).chave !== identificar(location.href).chave || this.status < 200 || this.status >= 300) return
+        if (!ativo || versao !== geracao || !contextoCompativel(pagina) || this.status < 200 || this.status >= 300) return
         try {
           if (this.responseType === 'json') extrair(this.response, location.href)
           else if (!this.responseType || this.responseType === 'text') processar(this.responseText, pagina, versao)

@@ -85,3 +85,17 @@ Utilize uma conta e mídias de teste próprias ou autorizadas. Registre navegado
 Na revisão documentada, a sintaxe dos scripts públicos e a leitura dos JSONs haviam sido verificadas. As suítes e a integração contínua estavam implementadas, mas não havia evidência de uma execução completa aprovada, compilação bem-sucedida ou homologação em sessão real do Instagram.
 
 Os cenários acima são critérios de teste, não resultados já obtidos. Atualize o registro quando houver evidências do commit correspondente.
+
+## Regressão contextual (0.3.0)
+
+| ID | Cenário | Resultado esperado |
+| --- | --- | --- |
+| H30 | Abrir Stories de um perfil e avançar | Manter somente o conjunto desse perfil, sem reiniciar a cada Story. |
+| H31 | Abrir Stories de outro perfil | Reiniciar a galeria; não misturar conjuntos. |
+| H32 | Abrir uma publicação do perfil | Exibir apenas as mídias identificadas da publicação/carrossel, sem itens da grade anterior. |
+| H33 | Voltar ao perfil e abrir outra publicação | Atualizar o contexto sem manter mídias anteriores. |
+| H34 | Limpar galeria | Remover mídias e seleção; não repor imediatamente os mesmos identificadores enquanto a conexão permanecer ativa. |
+| H35 | Atualizar após limpar | Permitir nova leitura dos elementos visíveis. |
+| H36 | Resposta com mais de 150 mídias elegíveis | Receber múltiplos lotes, respeitando limites de processamento e galeria. |
+
+Os casos são pendentes de execução no navegador. Os testes simulados cobrem isolamento por autor, carrossel, avanço de Story, transição do perfil aos Stories e emissão em lotes.

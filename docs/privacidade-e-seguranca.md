@@ -65,3 +65,5 @@ Limpar a galeria remove os itens da aba atual no painel, sem impedir novas captu
 Use a extensão apenas em relação a mídias às quais tenha acesso legítimo e autorização para copiar ou utilizar. A possibilidade técnica de visualizar um arquivo não implica autorização para redistribuí-lo. Não utilize a ferramenta para contornar controles de acesso, coletar conteúdo privado sem consentimento ou violar direitos de terceiros.
 
 Para comunicar uma falha, siga a [política de segurança](../SECURITY.md).
+
+Na versão 0.3.0 em desenvolvimento, o nome de perfil ou identificador da publicação/destaque é usado temporariamente para identificar o contexto da galeria. Esses dados não são persistidos. A captura estruturada restringe candidatos ao contexto identificável; a leitura do DOM permanece heurística. A limpeza mantém temporariamente identificadores suprimidos na conexão atual, até atualização ou mudança de contexto, com limite de 20.000 entradas.

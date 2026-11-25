@@ -112,3 +112,7 @@ O tipo MIME é uma validação declarativa, não uma inspeção de assinatura bi
 - A reprodução de vídeos segmentados, cobertura de múltiplos formatos de resposta, isolamento de eventos DOM e testes ponta a ponta são áreas que ainda exigem avaliação.
 
 Veja [privacidade e segurança](privacidade-e-seguranca.md) e [testes e homologação](testes-e-homologacao.md).
+
+## Evolução na versão 0.3.0
+
+O módulo `public/contexto.js` identifica o contexto pela rota. A navegação entre Stories do mesmo perfil preserva a galeria; mudanças de contexto reiniciam seu estado. Respostas estruturadas são filtradas por usuário, código de publicação ou identificador de destaque, com herança de contexto para carrosséis e conjuntos de Stories. A emissão ocorre em lotes de até 100 candidatos; o percurso tem limite de 50.000 iterações e até 5.000 itens por array. A galeria mantém até 10.000 mídias por aba. A limpeza envia os identificadores ao script de captura, invalida respostas anteriores e recebe confirmação. Os demais limites de tamanho de resposta e download permanecem. A identificação depende da estrutura disponibilizada pela página e precisa de homologação real.

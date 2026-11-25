@@ -169,8 +169,10 @@
       if (mensagem?.acao === 'limpar' && mensagem.contexto === contexto?.chave) {
         for (const chave of enviados.keys()) ignorados.add(chave)
         if (Array.isArray(mensagem.ids)) for (const id of mensagem.ids.slice(0, 10000)) if (typeof id === 'string' && id.length <= 8192) ignorados.add(id)
+        while (ignorados.size > 20000) ignorados.delete(ignorados.values().next().value)
         enviados.clear()
         document.dispatchEvent(new CustomEvent(eventoControle, { detail: true }))
+        porta.postMessage({ acao: 'limpo', contexto: contexto.chave })
       }
     })
     porta.postMessage({ acao: 'pronto' })

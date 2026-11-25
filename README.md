@@ -104,3 +104,7 @@ Utilize apenas conteúdos para os quais tenha autorização e respeite direitos 
 ## Licença
 
 Distribuído sob a [licença MIT](LICENSE). Projeto independente, sem vínculo oficial com o Instagram ou a Meta.
+
+## Próxima versão em homologação (0.3.0)
+
+A branch `dev` contém a galeria contextual por perfil, Stories, destaques e publicação, com limpeza direta e captura em lotes. A distribuição 0.2.0 continua sendo a referência das instruções anteriores até a publicação da nova versão. Consulte o [histórico](CHANGELOG.md) e os [testes de homologação](docs/testes-e-homologacao.md).

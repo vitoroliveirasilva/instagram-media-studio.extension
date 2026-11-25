@@ -44,7 +44,7 @@ test('não captura quando o painel está fechado', async () => {
 })
 
 test('captura maior resolução sem modificar a resposta original', async () => {
-  const dados = { user: { username: 'exemplo' }, product_type: 'story', media_type: 1, image_versions2: { candidates: [{ url: foto + '?q=1', width: 100, height: 100 }, { url: foto + '?q=2', width: 900, height: 900 }] }, user: { username: 'exemplo', senha: 'exemplo' } }
+  const dados = { product_type: 'story', media_type: 1, image_versions2: { candidates: [{ url: foto + '?q=1', width: 100, height: 100 }, { url: foto + '?q=2', width: 900, height: 900 }] }, user: { username: 'exemplo', senha: 'exemplo' } }
   const ambiente = preparar(dados)
   ambiente.ativar(true)
   const resposta = await ambiente.janela.fetch(consulta)
@@ -124,4 +124,24 @@ test('isola o carrossel da publicação aberta', async () => {
   await ambiente.janela.fetch(consulta)
   await aguardar()
   assert.deepEqual(capturas(ambiente).map(m => m.url), [foto, foto + '?segunda'])
+})
+
+test('aceita carregamento iniciado no perfil ao abrir os Stories desse mesmo perfil', async () => {
+  const ambiente = preparar({ reels_media: [{ user: { username: 'exemplo' }, items: [{ media_type: 1, image_versions2: { candidates: [{ url: foto }] } }] }] }, 'https://www.instagram.com/exemplo/')
+  ambiente.ativar(true)
+  const resposta = ambiente.janela.fetch(consulta)
+  ambiente.navegar('https://www.instagram.com/stories/exemplo/123/')
+  await resposta
+  await aguardar()
+  assert.equal(capturas(ambiente).length, 1)
+})
+
+test('descarta resposta ao navegar para Stories de outro perfil', async () => {
+  const ambiente = preparar({ reels_media: [{ user: { username: 'exemplo' }, items: [{ media_type: 1, image_versions2: { candidates: [{ url: foto }] } }] }] })
+  ambiente.ativar(true)
+  const resposta = ambiente.janela.fetch(consulta)
+  ambiente.navegar('https://www.instagram.com/stories/outro/123/')
+  await resposta
+  await aguardar()
+  assert.equal(capturas(ambiente).length, 0)
 })

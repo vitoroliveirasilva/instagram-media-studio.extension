@@ -65,3 +65,7 @@ Acesse [Actions](https://github.com/vitoroliveirasilva/instagram-media-studio.ex
 Informe versão da extensão, commit, navegador, versão do navegador, sistema operacional, passos para reproduzir, comportamento observado e esperado. Acrescente mensagens de erro e imagens anonimizadas quando úteis.
 
 Não compartilhe arquivos de diagnóstico contendo sessões, cookies, tokens, URLs assinadas, conteúdo privado ou respostas integrais do Instagram. Para falhas de segurança, consulte [SECURITY.md](../SECURITY.md).
+
+## Galeria contextual (0.3.0 em desenvolvimento)
+
+Abra o painel antes de entrar nos Stories ou em uma publicação. A galeria acompanha o contexto da URL; respostas anteriores à conexão não são recuperadas. Selecione Todas para verificar o conjunto atual. Use a lixeira da barra para remover mídias e o botão Limpar seleção para apenas desmarcar. Atualizar permite uma nova leitura. Se mídias não forem identificadas, avance manualmente pelos Stories e verifique se o Instagram disponibiliza arquivos diretos; não há garantia de recuperar todos os vídeos ou respostas não reconhecidas.

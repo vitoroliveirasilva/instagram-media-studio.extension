@@ -60,7 +60,7 @@ export default function Painel() {
           definirSelecionadas([])
           definirPrevia(null)
           definirFalhas([])
-          definirMidias(aba?.id === undefined ? [] : memorias.current.get(aba.id) || [])
+          definirMidias([])
         }
         const anterior = porta.current
         porta.current = null
@@ -94,7 +94,15 @@ export default function Painel() {
               definirFiltro('Todas')
               definirAviso('')
               downloadAtual.current?.abort()
-            }
+            } else definirMidias(memorias.current.get(id) || [])
+            return
+          }
+          if (mensagem?.acao === 'limpo' && mensagem.contexto === contextoAtual.current) {
+            memorias.current.delete(id)
+            definirMidias([])
+            definirSelecionadas([])
+            definirFalhas([])
+            definirPrevia(null)
             return
           }
           if (!Array.isArray(mensagem?.midias) || mensagem.contexto !== contextoAtual.current) return
