@@ -76,10 +76,9 @@
       ...(Array.isArray(item.hd_profile_pic_versions) ? item.hd_profile_pic_versions : []),
       item.hd_profile_pic_url_info,
       { url: item.profile_pic_url_hd },
-      { url: item.hd_profile_pic_url },
-      { url: item.profile_picture?.uri, width: item.profile_picture?.width, height: item.profile_picture?.height }
+      { url: item.hd_profile_pic_url }
     ], 'imagem')
-    const comum = candidatos([{ url: item.profile_pic_url }, { url: item.profile_picture_url }], 'imagem')
+    const comum = candidatos([{ url: item.profile_pic_url }, { url: item.profile_picture_url }, { url: item.profile_picture?.uri, width: item.profile_picture?.width, height: item.profile_picture?.height }], 'imagem')
     const melhorHd = melhor(hd)
     if (melhorHd) return { ...melhorHd, qualidadePerfil: 2 }
     const melhorComum = melhor(comum)
@@ -113,6 +112,7 @@
     let lote = []
     let melhorPerfil = null
     let total = 0
+    const urlsEmitidas = new Set()
     function emitir() {
       if (!lote.length) return
       document.dispatchEvent(new CustomEvent(eventoMidias, { detail: JSON.stringify({ contexto: contexto.chave, midias: lote }) }))
@@ -154,7 +154,11 @@
         const reconhecida = item.media_type === 1 || item.media_type === 2 || typeof item.is_video === 'boolean' || /Media|GraphImage|GraphVideo|GraphStoryImage|GraphStoryVideo/.test(String(item.__typename || '')) || !!video
         if (midia && !carrossel && reconhecida && (!ehVideo || video)) {
           const origem = contexto.tipo === 'stories' ? 'Stories' : contexto.tipo === 'destaque' ? 'Destaques' : item.product_type === 'clips' || caminho.startsWith('/reel/') ? 'Reels' : 'Posts'
-          lote.push({ url: midia.url, miniatura: imagem?.url || '', tipo: video ? 'video' : 'imagem', origem, largura: Number(midia.width) || 0, altura: Number(midia.height) || 0 })
+          const chaveMidia = (video ? 'video:' : 'imagem:') + midia.url
+          if (!urlsEmitidas.has(chaveMidia)) {
+            urlsEmitidas.add(chaveMidia)
+            lote.push({ url: midia.url, miniatura: imagem?.url || '', tipo: video ? 'video' : 'imagem', origem, largura: Number(midia.width) || 0, altura: Number(midia.height) || 0 })
+          }
           if (lote.length >= 100) emitir()
         }
       }
