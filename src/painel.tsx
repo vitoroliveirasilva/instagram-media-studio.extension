@@ -255,12 +255,12 @@ export default function Painel() {
             </button>
             <button className="expandir" aria-label="Pré-visualizar mídia" onClick={() => definirPrevia(midia)}><Expand size={14}/></button>
           </div>
-          <div className="legenda"><div><strong>{midia.origem === 'Perfil' ? 'Foto de perfil' : midia.origem}</strong><small>{video ? 'Vídeo' : 'Imagem'}</small></div><button className="icone" aria-label="Baixar mídia" disabled={ocupado} onClick={() => void iniciarDownload([midia])}><Download size={15}/></button></div>
+          <div className="legenda"><div><strong>{midia.origem === 'Perfil' ? 'Foto de perfil' : midia.origem}</strong><small>{midia.origem === 'Perfil' ? (midia.qualidadePerfil === 2 ? 'Versão HD informada' : 'Resolução disponível') : video ? 'Vídeo' : 'Imagem'}</small></div><button className="icone" aria-label="Baixar mídia" disabled={ocupado} onClick={() => void iniciarDownload([midia])}><Download size={15}/></button></div>
         </article>
       })}</div>}
     </main>
     <section className="controles">
-      {videoSemUrl && !midias.some(item => item.tipo === 'video') && !aviso && <div className="aviso" role="status">Vídeo detectado, mas nenhum arquivo direto completo foi identificado. Reproduza o vídeo e tente novamente.</div>}
+      {videoSemUrl && !midias.some(item => item.tipo === 'video') && !aviso && <div className="aviso" role="status">O vídeo está em reprodução, mas a página não forneceu um arquivo completo identificável. Vídeos segmentados ou protegidos podem não estar disponíveis.</div>}
       {aviso && <div className="aviso" role="status">{aviso}<button className="icone" aria-label="Dispensar mensagem" onClick={() => definirAviso('')}><X size={14}/></button></div>}
       <div className="selecao"><span>{escolhidas.length} {escolhidas.length === 1 ? 'selecionada' : 'selecionadas'}</span><div><button disabled={!escolhidas.length} onClick={() => definirSelecionadas([])}>Limpar seleção</button><button disabled={!visiveis.length} onClick={() => definirSelecionadas(lista => [...new Set([...lista, ...visiveis.filter(item => filtro === 'Perfil' || item.origem !== 'Perfil').map(item => item.id)])])}>Selecionar todas</button></div></div>
       {ocupado && <button className="cancelar" onClick={() => downloadAtual.current?.abort()}><X size={15}/> Cancelar download</button>}

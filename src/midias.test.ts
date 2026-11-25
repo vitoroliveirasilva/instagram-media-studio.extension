@@ -51,3 +51,12 @@ describe('Foto de perfil', () => {
     expect(lista.find(item => item.origem === 'Perfil')?.largura).toBe(640)
   })
 })
+
+
+it('preserva uma foto HD sem dimensões conhecidas diante da miniatura do DOM', () => {
+  const hd = { ...exemplo, origem: 'Perfil', qualidadePerfil: 2, largura: 0, altura: 0, url: exemplo.url + '&hd=1' }
+  const miniatura = { ...exemplo, origem: 'Perfil', qualidadePerfil: 0, largura: 150, altura: 150 }
+  const lista = reunir([], [hd, miniatura])
+  expect(lista).toHaveLength(1)
+  expect(lista[0].url).toBe(hd.url)
+})

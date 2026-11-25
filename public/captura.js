@@ -61,12 +61,12 @@
     const validas = midias.slice(0, 150).flatMap(midia => {
       const url = validarUrl(midia?.url)
       if (!url || !['imagem','video'].includes(midia.tipo) || !['Stories','Destaques','Posts','Reels','Perfil'].includes(midia.origem)) return []
-      return [{ url, miniatura: validarUrl(midia.miniatura), tipo: midia.tipo, origem: midia.origem, largura: Math.max(0, Number(midia.largura) || 0), altura: Math.max(0, Number(midia.altura) || 0) }]
+      return [{ url, miniatura: validarUrl(midia.miniatura), tipo: midia.tipo, origem: midia.origem, largura: Math.max(0, Number(midia.largura) || 0), altura: Math.max(0, Number(midia.altura) || 0), qualidadePerfil: midia.origem === 'Perfil' ? Math.max(0, Math.min(2, Number(midia.qualidadePerfil) || 0)) : 0 }]
     })
     const novas = validas.filter(midia => {
       const chave = identidade(midia)
       if (ignorados.has(chave)) return false
-      const qualidade = midia.largura * midia.altura + ':' + midia.miniatura + ':' + midia.origem + ':' + midia.url
+      const qualidade = midia.largura * midia.altura + ':' + midia.miniatura + ':' + midia.origem + ':' + midia.url + ':' + midia.qualidadePerfil
       if (enviados.get(chave) === qualidade) return false
       enviados.set(chave, qualidade)
       if (enviados.size > 2500) enviados.delete(enviados.keys().next().value)
@@ -107,7 +107,11 @@
     const foto = imagens[0]
     if (!foto) return
     const url = imagemDireta(foto)
-    publicar([{ url, miniatura: url, tipo: 'imagem', origem: 'Perfil', largura: foto.naturalWidth, altura: foto.naturalHeight }])
+    const atual = validarUrl(foto.currentSrc || foto.src)
+    const descritor = foto.srcset?.split(',').map(item => item.trim().split(/\s+/)).find(item => validarUrl(item[0]) === url)?.[1]
+    const largura = url === atual ? foto.naturalWidth : /^\d+w$/.test(descritor || '') ? parseInt(descritor, 10) : 0
+    const altura = url === atual ? foto.naturalHeight : largura && foto.naturalWidth ? Math.round(largura * foto.naturalHeight / foto.naturalWidth) : 0
+    publicar([{ url, miniatura: url, tipo: 'imagem', origem: 'Perfil', largura, altura, qualidadePerfil: 0 }])
   }
 
   function coletar() {
@@ -115,6 +119,7 @@
     sincronizar()
     ultimaColeta = performance.now()
     if (ultimaColeta < aguardarAte) { agendar(); return }
+    document.dispatchEvent(new CustomEvent('ims-reler-dados'))
     coletarPerfil()
     const midias = []
     const historia = contexto.tipo === 'stories' || contexto.tipo === 'destaque'

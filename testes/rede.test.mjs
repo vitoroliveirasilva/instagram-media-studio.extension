@@ -9,11 +9,13 @@ const foto = 'https://scontent.cdninstagram.com/foto.jpg'
 const video = 'https://scontent.cdninstagram.com/video.mp4'
 const consulta = 'https://www.instagram.com/graphql/query'
 
-function preparar(dados, pagina = 'https://www.instagram.com/stories/exemplo/123/') {
+function preparar(dados, pagina = 'https://www.instagram.com/stories/exemplo/123/', dadosPagina = []) {
   const eventos = new Map()
   const emitidos = []
   const chamadas = []
+  const scripts = dadosPagina.map(item => ({ textContent: JSON.stringify(item) }))
   const documento = {
+    querySelectorAll() { return scripts },
     addEventListener(nome, funcao) { eventos.set(nome, funcao) },
     dispatchEvent(evento) { emitidos.push(evento); eventos.get(evento.type)?.(evento) }
   }
@@ -29,7 +31,7 @@ function preparar(dados, pagina = 'https://www.instagram.com/stories/exemplo/123
   vm.createContext(contexto)
   vm.runInContext(contextoCodigo, contexto)
   vm.runInContext(codigo, contexto)
-  return { janela, emitidos, chamadas, navegar: href => { contexto.location.href = href }, ativar: ativo => documento.dispatchEvent(new Evento('ims-controle-captura', { detail: ativo })) }
+  return { janela, emitidos, chamadas, reler: () => documento.dispatchEvent(new Evento('ims-reler-dados', {})), navegar: href => { contexto.location.href = href }, ativar: ativo => documento.dispatchEvent(new Evento('ims-controle-captura', { detail: ativo })) }
 }
 
 const aguardar = () => new Promise(resolve => setTimeout(resolve, 40))
@@ -193,6 +195,47 @@ test('aceita vídeo de publicação aberta durante resposta iniciada no perfil',
   const resposta = ambiente.janela.fetch(consulta)
   ambiente.navegar('https://www.instagram.com/p/ABC/')
   await resposta
+  await aguardar()
+  assert.deepEqual(capturas(ambiente).map(m => m.url), [video])
+})
+
+
+test('reconhece metadados HD já presentes na página sem novas requisições', () => {
+  const ambiente = preparar({}, 'https://www.instagram.com/exemplo/', [{ data: { user: { username: 'exemplo', profile_pic_url: foto, hd_profile_pic_url_info: { url: foto + '?hd', width: 1080, height: 1080 } } } }])
+  ambiente.ativar(true)
+  ambiente.reler()
+  ambiente.reler()
+  const lista = capturas(ambiente)
+  assert.equal(lista.length, 1)
+  assert.equal(lista[0].url, foto + '?hd')
+  assert.equal(lista[0].largura, 1080)
+  assert.equal(lista[0].qualidadePerfil, 2)
+  assert.equal(ambiente.chamadas.length, 0)
+})
+
+test('não inventa dimensões de foto de perfil HD', () => {
+  const ambiente = preparar({}, 'https://www.instagram.com/exemplo/', [{ user: { username: 'exemplo', profile_pic_url_hd: foto } }])
+  ambiente.ativar(true)
+  ambiente.reler()
+  assert.equal(capturas(ambiente)[0].largura, 0)
+  assert.equal(capturas(ambiente)[0].qualidadePerfil, 2)
+})
+
+test('encontra vídeo completo nos metadados iniciais da publicação', () => {
+  const ambiente = preparar({}, 'https://www.instagram.com/reel/ABC/', [{ require: [['Componente', [], { data: { media: { shortcode: 'ABC', media_type: 2, video: { video_url: video }, image_versions2: { candidates: [{ url: foto }] } } } }]] }])
+  ambiente.ativar(true)
+  ambiente.reler()
+  const lista = capturas(ambiente)
+  assert.equal(lista.length, 1)
+  assert.equal(lista[0].url, video)
+  assert.equal(lista[0].tipo, 'video')
+  assert.equal(ambiente.chamadas.length, 0)
+})
+
+test('reconhece o Story atual pelo identificador quando a resposta não contém autor', async () => {
+  const ambiente = preparar({ items: [{ pk: '123', media_type: 2, video_url: video }, { pk: '456', media_type: 2, video_url: video + '?outro' }] })
+  ambiente.ativar(true)
+  await ambiente.janela.fetch('https://www.instagram.com/api/graphql')
   await aguardar()
   assert.deepEqual(capturas(ambiente).map(m => m.url), [video])
 })

@@ -70,3 +70,7 @@ A galeria passa a acompanhar o perfil, conjunto de Stories ou publicação abert
 ## Vídeos e foto de perfil (0.3.1)
 
 Ao abrir um perfil, a foto de perfil pode aparecer na categoria Perfil, com seleção e download individual. A ação Selecionar todas em Todas não inclui automaticamente a foto de perfil; selecione-a manualmente ou utilize o filtro Perfil. Para vídeos, abra a publicação, Reel ou Story com o painel aberto e reproduza-o normalmente. A extensão reconhece formatos adicionais de metadados, mas necessita de uma URL direta de arquivo completo; fluxos segmentados, protegidos ou indisponíveis não são remontados. A resolução da foto depende do que a página disponibilizar.
+
+## Resolução da foto e arquivos de vídeo (0.3.2)
+
+A extensão considera dados JSON já presentes na página, além das respostas elegíveis durante a navegação. A categoria Perfil prioriza versões HD declaradas pelo Instagram sem estimar artificialmente as dimensões. Quando só há miniatura disponível, a resolução permanece limitada à imagem fornecida. Arquivos de vídeo completos com URL direta podem ser identificados em mais estruturas; não há gravação da tela, reconstrução de fluxos segmentados ou contorno de proteção. A homologação funcional permanece necessária.

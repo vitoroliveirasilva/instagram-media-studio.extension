@@ -4,6 +4,13 @@
 
 O histórico registra funcionalidades e alterações relevantes do projeto. Os itens descrevem mudanças implementadas, não certificam que todos os cenários foram homologados.
 
+## 0.3.2 — em desenvolvimento
+
+- Leitura limitada de metadados JSON já presentes na página, sem consultas adicionais à API.
+- Preferência por foto de perfil HD declarada, sem inventar dimensões e sem substituição por miniatura de menor prioridade.
+- Identificação adicional de vídeos diretos em estruturas aninhadas e do Story atual pelo identificador.
+- Mensagem explícita para mídias segmentadas ou protegidas que não disponibilizam um arquivo direto completo.
+
 ## 0.3.1 — em desenvolvimento
 
 - Suporte a endereços diretos de vídeos e imagens em estruturas GraphQL adicionais, inclusive carrosséis.

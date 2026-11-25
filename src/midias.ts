@@ -28,7 +28,7 @@ export function normalizar(valor: unknown): Midia | null {
   const url = urlValida(item.url)
   if (!url || (item.tipo !== 'imagem' && item.tipo !== 'video') || !origens.has(item.origem as Origem)) return null
   const numero = (v: unknown) => typeof v === 'number' && Number.isFinite(v) && v > 0 ? Math.min(16384, Math.floor(v)) : 0
-  return { id: item.origem === 'Perfil' ? 'imagem:perfil' : item.tipo + ':' + identidade(url), url, miniatura: urlValida(item.miniatura), tipo: item.tipo, origem: item.origem as Origem, largura: numero(item.largura), altura: numero(item.altura) }
+  return { id: item.origem === 'Perfil' ? 'imagem:perfil' : item.tipo + ':' + identidade(url), url, miniatura: urlValida(item.miniatura), tipo: item.tipo, origem: item.origem as Origem, largura: numero(item.largura), altura: numero(item.altura), qualidadePerfil: item.origem === 'Perfil' && typeof item.qualidadePerfil === 'number' ? Math.max(0, Math.min(2, Math.floor(item.qualidadePerfil))) : 0 }
 }
 
 export function reunir(anteriores: Midia[], novas: unknown[]): Midia[] {
@@ -38,7 +38,7 @@ export function reunir(anteriores: Midia[], novas: unknown[]): Midia[] {
     if (!item) continue
     const anterior = mapa.get(item.id)
     if (!anterior) mapa.set(item.id, item)
-    else if (item.largura * item.altura >= anterior.largura * anterior.altura) {
+    else if ((item.qualidadePerfil || 0) > (anterior.qualidadePerfil || 0) || ((item.qualidadePerfil || 0) === (anterior.qualidadePerfil || 0) && item.largura * item.altura >= anterior.largura * anterior.altura)) {
       mapa.set(item.id, { ...item, miniatura: item.miniatura || anterior.miniatura, origem: item.origem === 'Posts' ? anterior.origem : item.origem })
     }
   }
