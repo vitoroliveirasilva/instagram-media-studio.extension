@@ -1,44 +1,52 @@
-# Instagram Media Studio — atualização visual 0.4.1
+# Instagram Media Studio — 0.5.0
 
-O pacote 0.4.1 aplica o novo visual sobre o ZIP 0.4.0 aprovado. Os scripts de captura, extração, contexto e serviço permanecem idênticos. O JavaScript do painel recebe apenas três alterações de apresentação: marca em duas linhas, contador de mídias e identificação visual do cartão de perfil.
+## Novo visual
 
-## O que mudou
+Biblioteca redesenhada com identidade em violeta, temas claro e escuro, indicação de conexão, contexto de captura, categorias com contadores e cartões com ações visíveis. A foto de perfil permanece selecionável separadamente. Os controles da biblioteca, da prévia e dos downloads seguem a mesma apresentação, com ajustes para painéis estreitos, teclado e movimento reduzido.
 
-- Paleta em coral, superfícies claras mais suaves e tema escuro em grafite.
-- Marca redesenhada, tipografia e hierarquia de informações revistas.
-- Filtros com indicação mais clara da categoria selecionada.
-- Cartões maiores, em duas colunas no painel estreito, com ações e seleção redesenhadas.
-- Melhor apresentação da foto de perfil, lista, prévia e estado vazio.
-- Botões, configurações e área de download padronizados.
-- Ajustes para painéis estreitos, navegação por teclado, contraste forçado e movimento reduzido.
+## Reels: vídeo, capa ou ambos
 
-## Atualizar a extensão
+Os cartões de vídeo possuem três botões:
 
-1. Extraia o ZIP.
-2. Substitua os arquivos da pasta da extensão instalada pelos arquivos novos.
-3. Abra `edge://extensions` ou `chrome://extensions` e clique em **Recarregar** no cartão da extensão.
-4. Atualize a aba do Instagram e abra o painel novamente.
+- **Vídeo:** baixa somente o arquivo do vídeo.
+- **Capa:** baixa somente a imagem da thumbnail disponibilizada pelo Instagram.
+- **Ambos:** baixa um ZIP com vídeo e capa. Os arquivos possuem nomes correspondentes, como `reels-0001.mp4` e `reels-0001-capa.jpg`.
 
-Se quiser usar uma nova pasta, remova a instalação anterior, ative **Modo do desenvolvedor**, escolha **Carregar sem compactação** e selecione a pasta com `manifest.json`.
+A extensão usa a maior versão de imagem recebida nos metadados. Não amplia a capa artificialmente nem promete uma resolução que não foi disponibilizada.
 
-## Reproduzir o pacote visual
+Para downloads em lote, selecione as mídias, escolha **Vídeo**, **Capa** ou **Vídeo + capa** na área inferior e clique em **Baixar seleção**. Essa preferência afeta os vídeos; imagens e fotos de perfil continuam sendo baixadas normalmente. As opções também estão disponíveis na prévia de um vídeo.
 
-A branch de desenvolvimento contém o novo estilo em `src/estilos.css` e as mesmas três mudanças de apresentação em `src/painel.tsx`. O empacotador permite aplicar essa apresentação ao pacote 0.4.0 aprovado, sem substituir seus arquivos funcionais pelos de outra versão do repositório.
+Se a capa não foi identificada, os botões correspondentes ficam desabilitados no cartão. Em lotes que incluam vídeos sem capa, o painel informa quantas não estavam disponíveis. O modo **Capa** não baixa o vídeo como substituto.
 
-Com as dependências instaladas, execute na raiz do projeto:
+## Atualizar
+
+1. Extraia o ZIP em uma pasta permanente.
+2. Substitua os arquivos da pasta da extensão instalada pelos novos arquivos.
+3. Abra `edge://extensions` ou `chrome://extensions` e clique em **Recarregar**.
+4. Atualize a aba do Instagram e abra o painel.
+
+Para usar uma nova pasta, remova a instalação anterior, ative **Modo do desenvolvedor**, clique em **Carregar sem compactação** e selecione a pasta com `manifest.json`.
+
+## Compilar e empacotar
+
+Os scripts de captura do pacote final são os mesmos da versão 0.4.0 aprovada. O painel e o fluxo de download são compilados a partir do código-fonte atualizado. Nenhuma nova permissão é necessária.
+
+Na raiz do projeto, com as dependências instaladas:
 
 ```sh
 npm run verificar
 npm run build
-node scripts/empacotar-visual.mjs CAMINHO/instagram-media-studio-v0.4.0.zip CAMINHO/instagram-media-studio-v0.4.1.zip
+node scripts/empacotar-visual.mjs CAMINHO/instagram-media-studio-v0.4.0.zip CAMINHO/instagram-media-studio-v0.5.0.zip
 ```
 
-O script confere o SHA-256 da base aprovada, verifica as três substituições de apresentação e confere os arquivos de captura no ZIP gerado.
+O empacotador valida o SHA-256 da base aprovada, usa o painel compilado e compara byte a byte os scripts de captura, extração, contexto e serviço antes de salvar o pacote.
 
 ## Validação
 
-- Os 45 testes existentes do repositório passaram, assim como a tipagem e a compilação.
-- O pacote visual foi aberto em Chromium com dados de exemplo: temas claro e escuro, larguras de 280, 320, 390 e 540 px, seleção, filtro de perfil, grade, lista, prévia, estado vazio, movimento reduzido e download de um MP4 completo.
-- Os scripts funcionais do pacote foram comparados byte a byte com a versão 0.4.0.
+- 57 testes automatizados, incluindo capas, modo padrão, seleção de URLs, extensão real de arquivo, nomes associados, lotes, ausência de capa e isolamento de requisições.
+- Compilação e verificação de tipagem.
+- Conferência em Chromium com dados controlados, em 280, 320, 390 e 540 px.
+- Downloads reais no navegador de arquivo de vídeo, imagem de capa e ZIP com os dois; conteúdo e integridade do ZIP conferidos.
+- Seleção em lote, opções na prévia, temas, grade/lista, configurações e movimento reduzido.
 
-A conferência visual usou dados controlados. A sessão real do Instagram não foi acessada nesta etapa; a preservação do comportamento aprovado foi verificada pela comparação dos arquivos funcionais.
+A sessão real do Instagram não foi acessada nesta etapa. A captura aprovada foi preservada pela comparação dos scripts funcionais.

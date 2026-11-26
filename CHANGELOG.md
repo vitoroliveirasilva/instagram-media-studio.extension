@@ -4,6 +4,15 @@
 
 O histórico registra funcionalidades e alterações relevantes do projeto. Os itens descrevem mudanças implementadas, não certificam que todos os cenários foram homologados.
 
+## 0.5.0 — biblioteca e capas de vídeos
+
+- Biblioteca redesenhada, com temas claro e escuro, status, contexto e contadores por categoria.
+- Botões visíveis para baixar vídeo, somente capa ou ambos em um ZIP.
+- Preferência de conteúdo nos downloads em lote e na prévia.
+- Nomes correspondentes para vídeo e capa, preservando o formato real de cada arquivo.
+- Tratamento explícito de capas ausentes, com 12 testes adicionais e conferência no navegador.
+- Scripts funcionais de captura preservados a partir da versão 0.4.0 aprovada.
+
 ## Reformulação visual — em revisão
 
 - Paleta coral, marca, temas claro e escuro, filtros e cartões maiores.
