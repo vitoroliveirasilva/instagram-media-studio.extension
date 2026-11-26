@@ -4,6 +4,14 @@
 
 O histórico registra funcionalidades e alterações relevantes do projeto. Os itens descrevem mudanças implementadas, não certificam que todos os cenários foram homologados.
 
+## Reformulação visual — em revisão
+
+- Paleta coral, marca, temas claro e escuro, filtros e cartões maiores.
+- Contador de mídias, controles de seleção, lista, prévia e estados vazios redesenhados.
+- Ajustes para painéis estreitos, teclado e movimento reduzido.
+- Empacotador visual 0.4.1 sobre a base 0.4.0 aprovada, preservando seus scripts funcionais.
+- Guia de atualização e reprodução em [visual](docs/visual.md).
+
 ## 0.3.3 — em desenvolvimento
 
 - Reconhecimento de identificadores de destaques em conjuntos e chaves de respostas, inclusive carregamentos iniciados no perfil.

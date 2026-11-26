@@ -232,7 +232,7 @@ export default function Painel() {
 
   return <div className="painel">
     <header className="cabecalho">
-      <div className="marca"><span className="marca-icone"><Images size={19}/></span><h1>Instagram Media Studio</h1></div>
+      <div className="marca"><span className="marca-icone"><Images size={19}/></span><div className="marca-texto"><span className="assinatura">INSTAGRAM</span><h1>Media Studio</h1></div></div>
       <button className="icone" aria-label="Configurações" aria-expanded={configuracoes} onClick={() => definirConfiguracoes(!configuracoes)}><Settings2 size={19}/></button>
     </header>
     {configuracoes && <section className="configuracoes" aria-label="Configurações">
@@ -243,7 +243,7 @@ export default function Painel() {
       {diagnostico && <div className="diagnostico"><p>Somente contagens técnicas, sem URLs, nomes de perfil ou credenciais.</p><textarea aria-label="Diagnóstico de captura" readOnly value={diagnostico} onFocus={evento => evento.currentTarget.select()}/><button className="limpar-galeria" onClick={() => void navigator.clipboard.writeText(diagnostico).then(() => definirAviso('Diagnóstico copiado.')).catch(() => definirAviso('Selecione e copie o diagnóstico manualmente.'))}>Copiar diagnóstico</button></div>}
     </section>}
     <nav className="filtros" aria-label="Filtrar mídias">{filtros.filter(item => item !== 'Perfil' || midias.some(midia => midia.origem === 'Perfil') || contextoAtual.current.startsWith('perfil:')).map(item => <button key={item} aria-pressed={filtro === item} onClick={() => definirFiltro(item)}>{item}</button>)}</nav>
-    <div className="barra"><div className="titulo-galeria"><h2>Galeria de mídias</h2>{tituloContexto && <small title={tituloContexto}>{tituloContexto}</small>}</div><div className="acoes">
+    <div className="barra"><div className="titulo-galeria"><h2>Sua galeria <span className="contador">{midias.length}</span></h2>{tituloContexto && <small title={tituloContexto}>{tituloContexto}</small>}</div><div className="acoes">
       <button className="icone" title="Limpar galeria" aria-label="Limpar galeria" disabled={!midias.length} onClick={limparGaleria}><Trash2 size={17}/></button>
       <button className="icone" title="Atualizar galeria" aria-label="Atualizar galeria" onClick={atualizar}><RefreshCw size={17}/></button>
       <div className="modos"><button className="icone" aria-label="Visualização em grade" aria-pressed={modo === 'grade'} onClick={() => alterarModo('grade')}><LayoutGrid size={16}/></button><button className="icone" aria-label="Visualização em lista" aria-pressed={modo === 'lista'} onClick={() => alterarModo('lista')}><List size={18}/></button></div>
@@ -252,7 +252,7 @@ export default function Painel() {
       {!visiveis.length ? <div className="vazio"><span><Images size={28}/></span><h3>{conectado ? 'Nenhuma mídia por aqui' : 'Abra o Instagram'}</h3><p>{conectado ? 'Abra uma publicação ou reproduza um vídeo para identificar as mídias disponíveis.' : 'Acesse o Instagram em uma aba para começar. Se já estiver aberto, atualize a página.'}</p></div> : <div className={'galeria ' + modo}>{visiveis.map(midia => {
         const marcada = conjuntoSelecionadas.has(midia.id)
         const video = midia.tipo === 'video'
-        return <article className={'cartao ' + (marcada ? 'marcado' : '')} key={midia.id}>
+        return <article className={'cartao ' + (marcada ? 'marcado' : '')} data-origem={midia.origem} key={midia.id}>
           <div className="miniatura">
             <button className="selecionar-midia" aria-label={(marcada ? 'Desmarcar ' : 'Selecionar ') + (video ? 'vídeo' : 'imagem')} aria-pressed={marcada} onClick={() => alternar(midia.id)}>
               {falhas.includes(midia.id) || (video && !midia.miniatura) ? <span className="placeholder">{video ? <Video size={30}/> : <Image size={30}/>}</span> : <img loading="lazy" referrerPolicy="no-referrer" src={video ? midia.miniatura : midia.url} alt={video ? 'Miniatura do vídeo' : 'Imagem do Instagram'} onError={() => definirFalhas(lista => lista.includes(midia.id) ? lista : [...lista, midia.id])}/>}
