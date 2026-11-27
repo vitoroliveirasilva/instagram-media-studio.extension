@@ -1,5 +1,5 @@
-import { useEffect, useMemo, useRef, useState } from 'react'
-import { Images, Settings2, LayoutGrid, List, Download, Image, Video, Play, Check, RefreshCw, X, Expand, Trash2, Moon, Sun, Monitor, Camera, Clapperboard, Layers, CirclePlay, Bookmark, UserRound, MousePointer2, Info, CheckCheck, ArrowDownRight } from 'lucide-react'
+import { useCallback, type PointerEvent as EventoPonteiro, useEffect, useMemo, useRef, useState } from 'react'
+import { Images, Settings2, LayoutGrid, List, Download, Image, Video, Play, Check, RefreshCw, X, Expand, Trash2, Moon, Sun, Monitor, Camera, Clapperboard, Layers, CirclePlay, Bookmark, UserRound, MousePointer2, Info, CheckCheck, ArrowDownRight, ChevronLeft, ChevronRight, Maximize2, Minimize2 } from 'lucide-react'
 import type { Filtro, Midia, Tema, ModoDownload } from './tipos'
 import { reunir, urlValida } from './midias'
 import { baixar, planejarDownloads } from './downloads'
@@ -20,6 +20,7 @@ export default function Painel() {
   const [selecionadas, definirSelecionadas] = useState<string[]>([])
   const [tema, definirTema] = useState<Tema>('sistema')
   const [configuracoes, definirConfiguracoes] = useState(false)
+  const [telaCheia, definirTelaCheia] = useState(false)
   const [previa, definirPrevia] = useState<Midia | null>(null)
   const [aviso, definirAviso] = useState('')
   const [conectado, definirConectado] = useState(false)
@@ -33,6 +34,11 @@ export default function Painel() {
   const [tituloContexto, definirTituloContexto] = useState('')
   const [videoSemUrl, definirVideoSemUrl] = useState(false)
   const dialogo = useRef<HTMLDialogElement>(null)
+  const visualizador = useRef<HTMLDivElement>(null)
+  const videoAmpliado = useRef<HTMLVideoElement>(null)
+  const faixaMiniaturas = useRef<HTMLDivElement>(null)
+  const gestoPrevia = useRef<{ x: number; y: number; ponteiro: number; inicio: number } | null>(null)
+  const cliqueBloqueadoAte = useRef(0)
   const downloadAtual = useRef<AbortController | null>(null)
   const janelaAtual = useRef<number | undefined>(undefined)
 
@@ -191,6 +197,80 @@ export default function Painel() {
 
   const planoSelecionado = useMemo(() => planejarDownloads(escolhidas, modoDownload), [escolhidas, modoDownload])
 
+  const indicePrevia = previa ? visiveis.findIndex(item => item.id === previa.id) : -1
+  const navegarPrevia = useCallback((direcao: -1 | 1) => {
+    videoAmpliado.current?.pause()
+    definirPrevia(atual => {
+      if (!atual) return atual
+      const indice = visiveis.findIndex(item => item.id === atual.id)
+      return indice < 0 ? atual : visiveis[indice + direcao] || atual
+    })
+  }, [visiveis])
+
+  useEffect(() => {
+    if (!previa) return
+    const teclado = (evento: KeyboardEvent) => {
+      if (evento.altKey || evento.ctrlKey || evento.metaKey || evento.shiftKey) return
+      const alvo = evento.target
+      if (alvo instanceof Element && alvo.closest('video, input, textarea, select, [contenteditable="true"], [role="slider"]')) return
+      if (evento.key === 'ArrowRight' || evento.key === 'ArrowLeft') {
+        evento.preventDefault()
+        navegarPrevia(evento.key === 'ArrowRight' ? 1 : -1)
+      }
+    }
+    document.addEventListener('keydown', teclado)
+    return () => document.removeEventListener('keydown', teclado)
+  }, [!!previa, navegarPrevia])
+
+  useEffect(() => {
+    const sincronizar = () => definirTelaCheia(!!document.fullscreenElement && document.fullscreenElement === visualizador.current)
+    document.addEventListener('fullscreenchange', sincronizar)
+    return () => document.removeEventListener('fullscreenchange', sincronizar)
+  }, [])
+
+  useEffect(() => {
+    gestoPrevia.current = null
+    if (!previa) return
+    const faixa = faixaMiniaturas.current
+    const ativa = faixa?.querySelector<HTMLButtonElement>('[aria-current="true"]')
+    if (faixa && ativa) faixa.scrollTo({ left: ativa.offsetLeft - faixa.clientWidth / 2 + ativa.clientWidth / 2, behavior: 'auto' })
+  }, [previa?.id])
+
+  function fecharPrevia() {
+    videoAmpliado.current?.pause()
+    const elemento = document.fullscreenElement
+    if (elemento && visualizador.current?.contains(elemento)) void document.exitFullscreen().catch(() => {})
+    definirPrevia(null)
+  }
+
+  async function alternarTelaCheia() {
+    try {
+      if (document.fullscreenElement === visualizador.current) await document.exitFullscreen()
+      else await visualizador.current?.requestFullscreen()
+    } catch { definirAviso('O navegador não permitiu a tela cheia. A navegação continua disponível na prévia.') }
+  }
+
+  function iniciarDeslize(evento: EventoPonteiro<HTMLDivElement>) {
+    if (!evento.isPrimary || (evento.pointerType === 'mouse' && evento.button !== 0)) { gestoPrevia.current = null; return }
+    const alvo = evento.target
+    if (alvo instanceof Element && alvo.closest('button, input, [role="slider"]')) return
+    if (alvo instanceof HTMLVideoElement && evento.clientY >= alvo.getBoundingClientRect().bottom - 54) return
+    gestoPrevia.current = { x: evento.clientX, y: evento.clientY, ponteiro: evento.pointerId, inicio: performance.now() }
+    evento.currentTarget.setPointerCapture(evento.pointerId)
+  }
+
+  function concluirDeslize(evento: EventoPonteiro<HTMLDivElement>) {
+    const inicio = gestoPrevia.current
+    gestoPrevia.current = null
+    if (!inicio || inicio.ponteiro !== evento.pointerId) return
+    const dx = evento.clientX - inicio.x
+    const dy = evento.clientY - inicio.y
+    if (Math.abs(dx) < 60 || Math.abs(dx) < Math.abs(dy) * 1.6 || performance.now() - inicio.inicio > 1000) return
+    cliqueBloqueadoAte.current = performance.now() + 350
+    navegarPrevia(dx < 0 ? 1 : -1)
+  }
+
+
   function alternar(id: string) {
     definirSelecionadas(lista => lista.includes(id) ? lista.filter(item => item !== id) : [...lista, id])
   }
@@ -243,7 +323,7 @@ export default function Painel() {
     </header>
     {configuracoes && <section className="configuracoes" aria-label="Configurações">
       <div className="config-titulo"><div><span className="sobretitulo">DO SEU JEITO</span><strong>Aparência</strong></div><button className="icone" aria-label="Fechar configurações" onClick={() => definirConfiguracoes(false)}><X size={17}/></button></div>
-      <div className="temas">{([{ valor: 'sistema', texto: 'Sistema', Icone: Monitor, Camera, Clapperboard, Layers, CirclePlay, Bookmark, UserRound, MousePointer2, Info, CheckCheck, ArrowDownRight }, { valor: 'claro', texto: 'Claro', Icone: Sun }, { valor: 'escuro', texto: 'Escuro', Icone: Moon }] as const).map(({valor,texto,Icone}) => <button key={valor} aria-pressed={tema === valor} onClick={() => alterarTema(valor)}><Icone size={19}/>{texto}{tema === valor && <Check size={12} className="tema-check"/>}</button>)}</div>
+      <div className="temas">{([{ valor: 'sistema', texto: 'Sistema', Icone: Monitor, Camera, Clapperboard, Layers, CirclePlay, Bookmark, UserRound, MousePointer2, Info, CheckCheck, ArrowDownRight, ChevronLeft, ChevronRight, Maximize2, Minimize2 }, { valor: 'claro', texto: 'Claro', Icone: Sun }, { valor: 'escuro', texto: 'Escuro', Icone: Moon }] as const).map(({valor,texto,Icone}) => <button key={valor} aria-pressed={tema === valor} onClick={() => alterarTema(valor)}><Icone size={19}/>{texto}{tema === valor && <Check size={12} className="tema-check"/>}</button>)}</div>
       <button className="limpar-galeria" onClick={limparGaleria}><Trash2 size={15}/> Limpar galeria</button>
     </section>}
     <section className="colecao" aria-label="Resumo da biblioteca">
@@ -301,10 +381,15 @@ export default function Painel() {
       {escolhidas.length > 0 && !planoSelecionado.arquivos.length && <p className="capa-indisponivel">Os vídeos selecionados ainda não têm capa disponível.</p>}
       <button className="baixar" disabled={!planoSelecionado.arquivos.length || ocupado} onClick={() => void iniciarDownload(escolhidas)}><Download size={18}/><span>{ocupado ? 'Preparando arquivos…' : escolhidas.length ? 'Baixar seleção' : 'Selecione suas mídias'}</span>{!ocupado && planoSelecionado.arquivos.length > 0 && <small>{planoSelecionado.arquivos.length > 1 ? 'ZIP' : 'ARQUIVO'}<ArrowDownRight size={13}/></small>}</button>
     </section>
-    <dialog ref={dialogo} aria-label="Pré-visualização da mídia" onCancel={() => definirPrevia(null)} onClick={evento => { if (evento.target === dialogo.current) definirPrevia(null) }}>
-      {previa && <div className="previa">
-        <div className="previa-cabecalho"><div><span className="sobretitulo">PRÉ-VISUALIZAÇÃO</span><strong>{previa.origem === 'Perfil' ? 'Foto de perfil' : previa.origem}</strong></div><button className="icone" aria-label="Fechar visualização" onClick={() => definirPrevia(null)}><X size={20}/></button></div>
-        {previa.tipo === 'video' ? <video key={previa.id} src={previa.url} poster={previa.miniatura || undefined} controls playsInline preload="metadata" onError={() => definirAviso('Vídeo indisponível. Abra a publicação novamente.')}/> : <img src={previa.url} alt="Pré-visualização da mídia" referrerPolicy="no-referrer" onError={() => definirAviso('Imagem indisponível. Abra a publicação novamente.')}/>}
+    <dialog ref={dialogo} aria-label="Pré-visualização da mídia" onCancel={fecharPrevia} onClick={evento => { if (evento.target === dialogo.current) fecharPrevia() }}>
+      {previa && <div className="previa" ref={visualizador}>
+        <div className="previa-cabecalho"><div><span className="sobretitulo">PRÉ-VISUALIZAÇÃO</span><strong>{previa.origem === 'Perfil' ? 'Foto de perfil' : previa.origem}</strong></div><div className="previa-acoes"><span className="previa-contador" aria-live="polite" aria-atomic="true">{indicePrevia + 1} / {visiveis.length}</span><button className="icone" aria-label={telaCheia ? 'Sair da tela cheia' : 'Entrar em tela cheia'} title={telaCheia ? 'Sair da tela cheia' : 'Tela cheia'} onClick={() => void alternarTelaCheia()}>{telaCheia ? <Minimize2 size={17}/> : <Maximize2 size={17}/>}</button><button className="icone" aria-label="Fechar visualização" onClick={fecharPrevia}><X size={20}/></button></div></div>
+        <div className="previa-palco" onPointerDown={iniciarDeslize} onPointerUp={concluirDeslize} onPointerCancel={() => { gestoPrevia.current = null }} onClickCapture={evento => { if (performance.now() < cliqueBloqueadoAte.current) { evento.preventDefault(); evento.stopPropagation() } }}>
+          {previa.tipo === 'video' ? <video ref={videoAmpliado} key={previa.id} src={previa.url} poster={previa.miniatura || undefined} controls controlsList="nofullscreen" playsInline preload="metadata" onError={() => definirAviso('Vídeo indisponível. Abra a publicação novamente.')}/> : <img draggable={false} src={previa.url} alt="Pré-visualização da mídia" referrerPolicy="no-referrer" onError={() => definirAviso('Imagem indisponível. Abra a publicação novamente.')}/>}
+          <button className="previa-seta anterior" aria-label="Mídia anterior" disabled={indicePrevia <= 0} onClick={() => navegarPrevia(-1)}><ChevronLeft size={22}/></button>
+          <button className="previa-seta proxima" aria-label="Próxima mídia" disabled={indicePrevia < 0 || indicePrevia >= visiveis.length - 1} onClick={() => navegarPrevia(1)}><ChevronRight size={22}/></button>
+        </div>
+        <div className="previa-faixa" ref={faixaMiniaturas} aria-label="Escolher mídia">{visiveis.map((item, indice) => <button key={item.id} aria-label={'Ver mídia ' + (indice + 1)} aria-current={item.id === previa.id ? 'true' : undefined} onClick={() => { videoAmpliado.current?.pause(); definirPrevia(item) }}>{item.tipo === 'video' && !item.miniatura ? <Video size={18}/> : <img loading="lazy" src={item.tipo === 'video' ? item.miniatura : item.url} alt="" referrerPolicy="no-referrer"/>}{item.tipo === 'video' && <span><Play size={9} fill="currentColor"/></span>}</button>)}</div>
         {previa.tipo === 'video' && <EscolhaVideo valor={modoDownload} alterar={definirModoDownload} desabilitado={ocupado}/>}
         <button className="baixar" disabled={ocupado || (previa.tipo === 'video' && modoDownload !== 'video' && !urlValida(previa.miniatura))} onClick={() => void iniciarDownload([previa])}><Download size={17}/><span>{previa.tipo !== 'video' ? 'Baixar imagem' : modoDownload === 'capa' ? 'Baixar capa' : modoDownload === 'ambos' ? 'Baixar vídeo + capa' : 'Baixar vídeo'}</span></button>
       </div>}

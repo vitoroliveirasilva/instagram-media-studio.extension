@@ -1,4 +1,4 @@
-# Instagram Media Studio — 0.5.0
+# Instagram Media Studio — 0.5.1
 
 ## Novo visual
 
@@ -18,6 +18,15 @@ Para downloads em lote, selecione as mídias, escolha **Vídeo**, **Capa** ou **
 
 Se a capa não foi identificada, os botões correspondentes ficam desabilitados no cartão. Em lotes que incluam vídeos sem capa, o painel informa quantas não estavam disponíveis. O modo **Capa** não baixa o vídeo como substituto.
 
+## Navegar pela mídia ampliada
+
+- Setas laterais e teclas **← / →** passam para a mídia anterior ou seguinte do filtro atual.
+- Arraste horizontalmente com o mouse ou deslize com o dedo sobre a mídia para navegar.
+- A faixa de miniaturas permite abrir uma mídia diretamente; o contador mostra a posição.
+- O botão **Tela cheia** amplia o visualizador mantendo setas e miniaturas disponíveis.
+- As extremidades da coleção ficam desabilitadas, sem voltar automaticamente ao início.
+- As teclas e os gestos sobre a área de controles do vídeo continuam reservados ao player.
+
 ## Atualizar
 
 1. Extraia o ZIP em uma pasta permanente.
@@ -36,7 +45,7 @@ Na raiz do projeto, com as dependências instaladas:
 ```sh
 npm run verificar
 npm run build
-node scripts/empacotar-visual.mjs CAMINHO/instagram-media-studio-v0.4.0.zip CAMINHO/instagram-media-studio-v0.5.0.zip
+node scripts/empacotar-visual.mjs CAMINHO/instagram-media-studio-v0.4.0.zip CAMINHO/instagram-media-studio-v0.5.1.zip
 ```
 
 O empacotador valida o SHA-256 da base aprovada, usa o painel compilado e compara byte a byte os scripts de captura, extração, contexto e serviço antes de salvar o pacote.
@@ -48,5 +57,6 @@ O empacotador valida o SHA-256 da base aprovada, usa o painel compilado e compar
 - Conferência em Chromium com dados controlados, em 280, 320, 390 e 540 px.
 - Downloads reais no navegador de arquivo de vídeo, imagem de capa e ZIP com os dois; conteúdo e integridade do ZIP conferidos.
 - Seleção em lote, opções na prévia, temas, grade/lista, configurações e movimento reduzido.
+- Navegação conferida no navegador com setas, teclado, miniaturas, limites da galeria, mouse, toque, tela cheia, filtro atual e Escape. A barra e as teclas do player de vídeo preservam seu comportamento.
 
 A sessão real do Instagram não foi acessada nesta etapa. A captura aprovada foi preservada pela comparação dos scripts funcionais.

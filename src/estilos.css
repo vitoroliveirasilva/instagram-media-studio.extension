@@ -229,3 +229,24 @@ dialog::backdrop { background: #0d0a16d4; backdrop-filter: blur(7px); -webkit-ba
   .filtros button[aria-pressed="true"], .escolha-video button[aria-pressed="true"], .modos .icone[aria-pressed="true"] { outline: 2px solid Highlight; }
   .check { background: Canvas; color: CanvasText; } .marcado .check { background: Highlight; color: HighlightText; }
 }
+
+.previa-acoes { display: flex; align-items: center; gap: 5px; }
+.previa-contador { padding: 0 6px; font-size: 11px; color: var(--muted); white-space: nowrap; font-variant-numeric: tabular-nums; }
+.previa-palco { position: relative; display: flex; align-items: center; justify-content: center; height: min(50dvh, 580px); min-height: 100px; overflow: hidden; border: 1px solid var(--borda); border-radius: 11px; background: #100e17; touch-action: pan-y pinch-zoom; user-select: none; }
+.previa .previa-palco > img, .previa .previa-palco > video { width: 100%; height: 100%; max-height: 100%; object-fit: contain; border: 0; border-radius: 0; }
+.previa-seta { position: absolute; top: 50%; display: grid; place-items: center; width: 34px; height: 45px; padding: 0; border: 1px solid #ffffff38; border-radius: 10px; color: #fff; background: #181321a8; backdrop-filter: blur(8px); transform: translateY(-50%); box-shadow: 0 2px 9px #00000015; }
+.previa-seta.anterior { left: 9px; } .previa-seta.proxima { right: 9px; }
+.previa-seta:not(:disabled):hover { background: #7650dd; border-color: #ffffff90; }
+.previa-seta:disabled { opacity: .2; }
+.previa-seta:focus-visible { outline-color: #fff; outline-offset: 2px; }
+.previa-faixa { position: relative; display: flex; align-items: center; gap: 7px; overflow-x: auto; padding: 3px; scrollbar-width: thin; scrollbar-color: var(--borda) transparent; }
+.previa-faixa > button { position: relative; flex: 0 0 51px; width: 51px; height: 42px; overflow: hidden; border: 2px solid transparent; border-radius: 7px; background: var(--suave); color: var(--muted); opacity: .65; }
+.previa .previa-faixa img { width: 100%; height: 100%; max-height: 100%; border: 0; border-radius: 0; object-fit: cover; }
+.previa-faixa > button[aria-current="true"] { opacity: 1; border-color: var(--acento); box-shadow: 0 0 0 1px var(--acento); }
+.previa-faixa > button > span { position: absolute; inset: 0; display: grid; place-items: center; color: white; background: #00000026; }
+.previa:fullscreen { width: 100vw; height: 100dvh; min-height: 0; padding: 18px max(18px, calc((100vw - 1250px) / 2)); overflow: auto; grid-template-rows: auto minmax(100px, 1fr) auto auto auto; align-content: stretch; background: #14111d; color: #fff; --texto: #fff; --muted: #beb4ce; --borda: #3b324b; --suave: #2d2639; --superficie: #241d31; --acento: #bf9dff; }
+.previa:fullscreen .previa-palco { height: 100%; max-height: none; }
+.previa:fullscreen .previa-faixa { justify-self: center; width: min(100%, 900px); }
+.previa:fullscreen .escolha-video, .previa:fullscreen > .baixar { width: min(100%, 620px); justify-self: center; }
+@media (max-height: 600px) { .previa { gap: 9px; } .previa-palco { height: 38dvh; } .previa-faixa > button { flex-basis: 42px; width: 42px; height: 34px; } .previa:fullscreen { padding-block: 10px; } }
+@media (forced-colors: active) { .previa-seta { background: Canvas; color: CanvasText; border-color: ButtonText; } .previa-faixa > button[aria-current="true"] { outline: 2px solid Highlight; } }

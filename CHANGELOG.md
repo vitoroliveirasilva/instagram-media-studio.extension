@@ -4,6 +4,13 @@
 
 O histórico registra funcionalidades e alterações relevantes do projeto. Os itens descrevem mudanças implementadas, não certificam que todos os cenários foram homologados.
 
+## 0.5.1 — navegação na mídia ampliada
+
+- Setas anterior/próxima, teclado e gestos horizontais na prévia.
+- Miniaturas e contador de posição, respeitando o filtro atual da galeria.
+- Tela cheia do visualizador com navegação preservada.
+- Preservação das teclas e da área de controles do vídeo.
+
 ## 0.5.0 — biblioteca e capas de vídeos
 
 - Biblioteca redesenhada, com temas claro e escuro, status, contexto e contadores por categoria.
