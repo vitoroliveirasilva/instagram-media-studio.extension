@@ -1,5 +1,5 @@
 import { useCallback, type PointerEvent as EventoPonteiro, useEffect, useMemo, useRef, useState } from 'react'
-import { Images, Settings2, LayoutGrid, List, Download, Image, Video, Play, Check, RefreshCw, X, Expand, Trash2, Moon, Sun, Monitor, Camera, Clapperboard, Layers, CirclePlay, Bookmark, UserRound, MousePointer2, Info, CheckCheck, ArrowDownRight, ChevronLeft, ChevronRight, Maximize2, Minimize2 } from 'lucide-react'
+import { Images, Settings2, LayoutGrid, List, Download, Image, Video, Play, Check, RefreshCw, X, Expand, Trash2, Moon, Sun, Monitor, Camera, Clapperboard, Layers, CirclePlay, Bookmark, UserRound, MousePointer2, Info, CheckCheck, ArrowDownRight, Aperture, ChevronDown, ChevronLeft, ChevronRight, Maximize2, Minimize2 } from 'lucide-react'
 import type { Filtro, Midia, Tema, ModoDownload } from './tipos'
 import { reunir, urlValida } from './midias'
 import { baixar, planejarDownloads } from './downloads'
@@ -18,7 +18,7 @@ export default function Painel() {
   const [modoDownload, definirModoDownload] = useState<ModoDownload>('video')
   const [modo, definirModo] = useState<'grade' | 'lista'>('grade')
   const [selecionadas, definirSelecionadas] = useState<string[]>([])
-  const [tema, definirTema] = useState<Tema>('sistema')
+  const [tema, definirTema] = useState<Tema>('escuro')
   const [configuracoes, definirConfiguracoes] = useState(false)
   const [telaCheia, definirTelaCheia] = useState(false)
   const [previa, definirPrevia] = useState<Midia | null>(null)
@@ -45,8 +45,8 @@ export default function Painel() {
   useEffect(() => () => downloadAtual.current?.abort(), [])
 
   useEffect(() => {
-    chrome.storage.local.get(['tema','modo']).then(dados => {
-      if (['sistema','claro','escuro'].includes(dados.tema)) definirTema(dados.tema)
+    chrome.storage.local.get(['temaEssencial','modo']).then(dados => {
+      if (['sistema','claro','escuro'].includes(dados.temaEssencial)) definirTema(dados.temaEssencial)
       if (['grade','lista'].includes(dados.modo)) definirModo(dados.modo)
     }).catch(() => {})
   }, [])
@@ -197,6 +197,8 @@ export default function Painel() {
 
   const planoSelecionado = useMemo(() => planejarDownloads(escolhidas, modoDownload), [escolhidas, modoDownload])
 
+  const fotoContexto = contextoAtual.current.startsWith('perfil:') ? midias.find(item => item.origem === 'Perfil') : undefined
+
   const indicePrevia = previa ? visiveis.findIndex(item => item.id === previa.id) : -1
   const navegarPrevia = useCallback((direcao: -1 | 1) => {
     videoAmpliado.current?.pause()
@@ -282,7 +284,7 @@ export default function Painel() {
 
   function alterarTema(valor: Tema) {
     definirTema(valor)
-    void chrome.storage.local.set({ tema: valor }).catch(() => definirAviso('Não foi possível salvar a preferência.'))
+    void chrome.storage.local.set({ temaEssencial: valor }).catch(() => definirAviso('Não foi possível salvar a preferência.'))
   }
 
   async function iniciarDownload(lista: Midia[], opcao: ModoDownload = modoDownload) {
@@ -315,35 +317,22 @@ export default function Painel() {
 
   return <div className="painel">
     <header className="cabecalho">
-      <div className="marca"><span className="marca-icone"><Camera size={23}/></span><div className="marca-texto"><span className="assinatura">INSTAGRAM</span><h1>Media Studio<span className="marca-ponto">.</span></h1></div></div>
-      <div className="cabecalho-acoes">
-        <button className="icone" aria-label={tema === 'escuro' ? 'Ativar tema claro' : 'Ativar tema escuro'} title="Alternar tema" onClick={() => alterarTema(tema === 'escuro' ? 'claro' : 'escuro')}>{tema === 'escuro' ? <Sun size={18}/> : <Moon size={18}/>}</button>
-        <button className="icone" aria-label="Configurações" aria-expanded={configuracoes} onClick={() => definirConfiguracoes(!configuracoes)}><Settings2 size={18}/></button>
-      </div>
+      <div className="marca"><span className="marca-icone"><Aperture size={25}/></span><h1>Media Studio</h1></div>
+      <button className="icone" aria-label="Configurações" aria-expanded={configuracoes} title="Configurações" onClick={() => definirConfiguracoes(!configuracoes)}><Settings2 size={18}/></button>
     </header>
     {configuracoes && <section className="configuracoes" aria-label="Configurações">
       <div className="config-titulo"><div><span className="sobretitulo">DO SEU JEITO</span><strong>Aparência</strong></div><button className="icone" aria-label="Fechar configurações" onClick={() => definirConfiguracoes(false)}><X size={17}/></button></div>
-      <div className="temas">{([{ valor: 'sistema', texto: 'Sistema', Icone: Monitor, Camera, Clapperboard, Layers, CirclePlay, Bookmark, UserRound, MousePointer2, Info, CheckCheck, ArrowDownRight, ChevronLeft, ChevronRight, Maximize2, Minimize2 }, { valor: 'claro', texto: 'Claro', Icone: Sun }, { valor: 'escuro', texto: 'Escuro', Icone: Moon }] as const).map(({valor,texto,Icone}) => <button key={valor} aria-pressed={tema === valor} onClick={() => alterarTema(valor)}><Icone size={19}/>{texto}{tema === valor && <Check size={12} className="tema-check"/>}</button>)}</div>
+      <div className="temas">{([{ valor: 'sistema', texto: 'Sistema', Icone: Monitor }, { valor: 'claro', texto: 'Claro', Icone: Sun }, { valor: 'escuro', texto: 'Escuro', Icone: Moon }] as const).map(({valor,texto,Icone}) => <button key={valor} aria-pressed={tema === valor} onClick={() => alterarTema(valor)}><Icone size={19}/>{texto}{tema === valor && <Check size={12} className="tema-check"/>}</button>)}</div>
       <button className="limpar-galeria" onClick={limparGaleria}><Trash2 size={15}/> Limpar galeria</button>
     </section>}
-    <section className="colecao" aria-label="Resumo da biblioteca">
-      <div className="colecao-topo"><span className="sobretitulo">SUA BIBLIOTECA</span><span className={'status-conexao ' + (conectado ? 'ativo' : '')}><i/>{conectado ? 'Captura ativa' : 'Desconectado'}</span></div>
-      <div className="colecao-titulo"><h2>Suas mídias,<br/><span>em um só lugar</span></h2><span className="colecao-simbolo" aria-hidden="true"><Images size={34}/></span></div>
-      <div className="colecao-contexto"><span>{tituloContexto || 'Abra o Instagram para começar'}</span><span className="colecao-total">{midias.length} {midias.length === 1 ? 'item' : 'itens'}</span></div>
+    <section className="perfil-atual" aria-label="Contexto de captura">
+      <span className="perfil-avatar">{fotoContexto ? <img src={fotoContexto.url} alt="" referrerPolicy="no-referrer"/> : <UserRound size={19}/>}</span>
+      <span className="perfil-nome" title={tituloContexto}>{tituloContexto || 'Abra o Instagram'}</span>
+      <span className={'status-conexao ' + (conectado ? 'ativo' : '')} title={conectado ? 'Captura ativa nesta aba' : 'Aguardando uma aba do Instagram'}><i/><span>{conectado ? 'Conectado' : 'Aguardando'}</span></span>
+      <button className="icone" title="Atualizar galeria" aria-label="Atualizar galeria" onClick={atualizar}><RefreshCw size={16}/></button>
     </section>
-    <nav className="filtros" aria-label="Filtrar mídias">{filtros.map(item => {
-      const Icone = iconesFiltros[item]
-      const total = item === 'Todas' ? midias.length : midias.filter(midia => midia.origem === item).length
-      return <button key={item} aria-pressed={filtro === item} onClick={() => definirFiltro(item)}><Icone size={14}/><span>{item}</span>{total > 0 && <small>{total}</small>}</button>
-    })}</nav>
-    <div className="barra">
-      <div className="titulo-galeria"><h3>{filtro === 'Todas' ? 'Todos os arquivos' : filtro}<span className="contador">{visiveis.length}</span></h3></div>
-      <div className="acoes">
-        <button className="icone" title="Atualizar galeria" aria-label="Atualizar galeria" onClick={atualizar}><RefreshCw size={16}/></button>
-        <button className="icone" title="Limpar galeria" aria-label="Limpar galeria" disabled={!midias.length} onClick={limparGaleria}><Trash2 size={16}/></button>
-        <div className="modos"><button className="icone" aria-label="Visualização em grade" aria-pressed={modo === 'grade'} onClick={() => alterarModo('grade')}><LayoutGrid size={15}/></button><button className="icone" aria-label="Visualização em lista" aria-pressed={modo === 'lista'} onClick={() => alterarModo('lista')}><List size={17}/></button></div>
-      </div>
-    </div>
+    <div className="biblioteca-cabecalho"><h2>Biblioteca</h2><div className="biblioteca-info"><span className="contador">{visiveis.length} {visiveis.length === 1 ? 'mídia' : 'mídias'}</span><div className="modos"><button className="icone" aria-label="Visualização em grade" aria-pressed={modo === 'grade'} title="Grade" onClick={() => alterarModo('grade')}><LayoutGrid size={14}/></button><button className="icone" aria-label="Visualização em lista" aria-pressed={modo === 'lista'} title="Lista" onClick={() => alterarModo('lista')}><List size={16}/></button></div></div></div>
+    <nav className="filtros" aria-label="Filtrar mídias">{filtros.map(item => <button key={item} title={item} aria-pressed={filtro === item} onClick={() => definirFiltro(item)}><span>{item}</span></button>)}</nav>
     <main className="rolagem">
       {!visiveis.length ? <div className="vazio"><div className="vazio-ilustracao" aria-hidden="true"><span/><span/><span><Images size={30}/></span></div><h3>{conectado ? 'Tudo pronto para capturar' : 'Sua próxima coleção começa aqui'}</h3><p>{conectado ? 'Abra uma publicação, Story ou Reel. As mídias disponíveis aparecem aqui.' : 'Abra o Instagram em uma aba e navegue até as mídias que deseja salvar.'}</p><span className="vazio-dica"><MousePointer2 size={13}/>{conectado ? 'Selecione, escolha e baixe' : 'Conecte-se pela aba do Instagram'}</span></div> : <div className={'galeria ' + modo}>{visiveis.map((midia, indice) => {
         const marcada = conjuntoSelecionadas.has(midia.id)
@@ -363,20 +352,22 @@ export default function Painel() {
             </button>
             <button className="expandir" aria-label="Pré-visualizar mídia" title="Abrir prévia" onClick={() => definirPrevia(midia)}><Expand size={13}/></button>
           </div>
-          <div className="legenda"><div><strong>{titulo}</strong><small>{resolucao}</small></div>{!video && <button className="icone baixar-individual" title="Baixar imagem" aria-label="Baixar imagem" disabled={ocupado} onClick={() => void iniciarDownload([midia])}><Download size={16}/></button>}</div>
-          {video && <div className="reel-downloads" aria-label="Downloads do vídeo">
-            <button disabled={ocupado} title="Baixar só o vídeo" aria-label="Baixar só o vídeo" onClick={() => void iniciarDownload([midia], 'video')}><Video size={14}/><span>Vídeo</span></button>
-            <button disabled={ocupado || !temCapa} title={temCapa ? 'Baixar só a capa' : 'Capa não disponível neste vídeo'} aria-label="Baixar só a capa" onClick={() => void iniciarDownload([midia], 'capa')}><Image size={14}/><span>Capa</span></button>
-            <button disabled={ocupado || !temCapa} title={temCapa ? 'Baixar vídeo e capa juntos em ZIP' : 'Capa não disponível neste vídeo'} aria-label="Baixar vídeo e capa" onClick={() => void iniciarDownload([midia], 'ambos')}><Layers size={14}/><span>Ambos</span></button>
-          </div>}
+          <div className="legenda"><div><strong>{titulo}</strong><small>{resolucao}</small></div>{video ? <details className="download-card" name="downloads-video" onBlur={evento => { if (!evento.currentTarget.contains(evento.relatedTarget)) evento.currentTarget.open = false }}>
+            <summary aria-label="Opções de download do vídeo" title="Baixar vídeo ou capa"><Download size={14}/><ChevronDown size={10}/></summary>
+            <div className="reel-downloads" aria-label="Downloads do vídeo">
+              <button disabled={ocupado} aria-label="Baixar só o vídeo" onClick={evento => { evento.currentTarget.closest('details')?.removeAttribute('open'); void iniciarDownload([midia], 'video') }}><Video size={14}/><span>Somente vídeo</span></button>
+              <button disabled={ocupado || !temCapa} title={temCapa ? 'Baixar só a capa' : 'Capa não disponível neste vídeo'} aria-label="Baixar só a capa" onClick={evento => { evento.currentTarget.closest('details')?.removeAttribute('open'); void iniciarDownload([midia], 'capa') }}><Image size={14}/><span>Somente capa</span></button>
+              <button disabled={ocupado || !temCapa} title={temCapa ? 'Vídeo e capa em ZIP' : 'Capa não disponível neste vídeo'} aria-label="Baixar vídeo e capa" onClick={evento => { evento.currentTarget.closest('details')?.removeAttribute('open'); void iniciarDownload([midia], 'ambos') }}><Layers size={14}/><span>Vídeo + capa</span><small>ZIP</small></button>
+            </div>
+          </details> : <button className="icone baixar-individual" title="Baixar imagem" aria-label="Baixar imagem" disabled={ocupado} onClick={() => void iniciarDownload([midia])}><Download size={15}/></button>}</div>
         </article>
       })}</div>}
     </main>
     <section className="controles" aria-label="Seleção e download">
       {videoSemUrl && !midias.some(item => item.tipo === 'video') && !aviso && <div className="aviso" role="status">O vídeo ainda não disponibilizou um arquivo completo. Atualize a galeria após reproduzi-lo.</div>}
       {aviso && <div className="aviso" role="status"><Info size={14}/><span>{aviso}</span><button className="icone" aria-label="Dispensar mensagem" onClick={() => definirAviso('')}><X size={14}/></button></div>}
-      {midias.some(item => item.tipo === 'video') && <EscolhaVideo valor={modoDownload} alterar={definirModoDownload} desabilitado={ocupado}/>}
       <div className="selecao"><span><span className="selecao-numero">{escolhidas.length}</span>{escolhidas.length === 1 ? 'selecionada' : 'selecionadas'}</span><div><button disabled={!escolhidas.length} onClick={() => definirSelecionadas([])}>Limpar</button><button disabled={!visiveis.length} onClick={() => definirSelecionadas(lista => [...new Set([...lista, ...visiveis.filter(item => filtro === 'Perfil' || item.origem !== 'Perfil').map(item => item.id)])])}><CheckCheck size={13}/>Selecionar todas</button></div></div>
+      {midias.some(item => item.tipo === 'video') && <EscolhaVideo valor={modoDownload} alterar={definirModoDownload} desabilitado={ocupado}/>}
       {ocupado && <button className="cancelar" onClick={() => downloadAtual.current?.abort()}><X size={14}/> Cancelar download</button>}
       {escolhidas.length > 0 && !planoSelecionado.arquivos.length && <p className="capa-indisponivel">Os vídeos selecionados ainda não têm capa disponível.</p>}
       <button className="baixar" disabled={!planoSelecionado.arquivos.length || ocupado} onClick={() => void iniciarDownload(escolhidas)}><Download size={18}/><span>{ocupado ? 'Preparando arquivos…' : escolhidas.length ? 'Baixar seleção' : 'Selecione suas mídias'}</span>{!ocupado && planoSelecionado.arquivos.length > 0 && <small>{planoSelecionado.arquivos.length > 1 ? 'ZIP' : 'ARQUIVO'}<ArrowDownRight size={13}/></small>}</button>

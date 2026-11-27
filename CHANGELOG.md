@@ -4,6 +4,14 @@
 
 O histórico registra funcionalidades e alterações relevantes do projeto. Os itens descrevem mudanças implementadas, não certificam que todos os cenários foram homologados.
 
+## 0.6.0 — visual Essencial
+
+- Aplicação da direção aprovada, em preto e violeta discreto, com galeria sem cartões externos.
+- Cabeçalho compacto, contexto com foto quando disponível, filtros sublinhados e mais espaço para mídias.
+- Menu individual de download para vídeo, capa ou ambos, mantendo o lote e a prévia.
+- Tema escuro como padrão, com preferência própria e temas claro/sistema nas configurações.
+- Preservação da navegação ampliada por setas, teclado, gestos e miniaturas.
+
 ## 0.5.1 — navegação na mídia ampliada
 
 - Setas anterior/próxima, teclado e gestos horizontais na prévia.
