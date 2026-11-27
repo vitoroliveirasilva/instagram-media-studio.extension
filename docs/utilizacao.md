@@ -1,64 +1,39 @@
 # Guia de utilização
 
-[Voltar ao início](../README.md)
+## Capturar e organizar
 
-## Painel lateral
+Abra o painel na aba do Instagram e navegue pelo conteúdo desejado. A extensão combina elementos carregados na página com respostas e metadados disponibilizados à sessão. O contexto identifica perfil, publicação, Stories ou destaque; mudanças de contexto reiniciam a galeria correspondente. A troca de aba mantém galerias separadas enquanto o painel está aberto.
 
-O Instagram Media Studio opera ao lado da aba do Instagram. Abra o painel pelo ícone da extensão e navegue normalmente. Não é necessário abrir o console, o inspetor de elementos ou a aba de rede.
+Use os filtros para escolher a categoria e alterne entre grade e lista nas configurações. **Atualizar galeria** solicita nova coleta. A limpeza remove os itens do contexto e suprime sua reemissão imediata; atualizar ou mudar de contexto permite coletar novamente.
 
-A interface contém cabeçalho com configurações, filtros, galeria, controles de atualização e visualização, seleção e downloads. A galeria possui rolagem própria e os controles inferiores permanecem acessíveis.
+## Foto de perfil
 
-## Galeria e filtros
+O cartão da foto aparece quando há um candidato associado ao perfil atual. A versão HD declarada tem prioridade; a extensão não amplia imagens para simular qualidade. Quando um endereço falha, o painel solicita recuperação com tentativas limitadas. Se a imagem continuar indisponível, atualize a galeria e a página do perfil.
 
-| Filtro | Conteúdo esperado |
+## Baixar imagens, vídeos e capas
+
+| Opção | Resultado |
 | --- | --- |
-| Todas | Todas as mídias identificadas na galeria atual. |
-| Stories | Mídias classificadas como Stories. |
-| Posts | Publicações, incluindo itens de carrosséis quando identificados. |
-| Reels | Mídias classificadas como Reels. |
-| Destaques | Mídias classificadas como destaques. |
+| Somente vídeo | Arquivo completo do vídeo identificado. |
+| Somente capa | Imagem de capa recebida nos metadados, sem baixar o vídeo. |
+| Vídeo + capa | ZIP com arquivos correspondentes, por exemplo `reels-0001.mp4` e `reels-0001-capa.jpg`. |
 
-A classificação é estimada a partir da página e das informações disponíveis na mídia. Algumas categorias podem estar incorretas. O filtro **Todas** ajuda a localizar itens classificados de outra forma.
+Abra o menu de download do cartão de vídeo para escolher a opção. As opções de capa ficam desabilitadas quando não há endereço válido identificado. Na seleção múltipla e na prévia, o seletor **Vídeo / Capa / Vídeo + capa** controla o conteúdo dos vídeos; imagens e fotos de perfil continuam sendo incluídas normalmente.
 
-A galeria acumula até mil mídias por aba durante a sessão. Respostas carregadas antecipadamente pelo Instagram podem incluir itens que ainda não foram exibidos na tela. O botão de atualização solicita uma nova leitura dos elementos visíveis; ele não consulta a API nem recupera respostas de rede antigas.
+Selecione os itens e clique em **Baixar seleção**. Uma única saída é enviada como arquivo; múltiplas saídas formam um ZIP. O painel informa progresso, capas ausentes e falhas parciais. **Cancelar download** interrompe a preparação; depois que o arquivo foi encaminhado ao navegador, acompanhe ou cancele no gerenciador de downloads.
 
-## Visualização e seleção
+O destino usa a subpasta `Instagram Media Studio/`. O limite é de 250 MiB de conteúdo por operação; a montagem do ZIP pode exigir memória adicional. O aviso de solicitação não comprova a conclusão do download.
 
-- **Grade:** miniaturas organizadas em colunas, adaptadas à largura do painel.
-- **Lista:** apresentação vertical com miniatura, categoria e tipo.
-- **Seleção:** clique na miniatura para selecionar ou desmarcar.
-- **Pré-visualização:** clique no ícone de expansão; feche pelo botão correspondente ou pela tecla Esc.
-- **Selecionar todas:** inclui as mídias do filtro atual sem descartar seleções anteriores.
-- **Limpar:** remove todas as seleções, inclusive as de outros filtros.
+## Visualizar em tamanho ampliado
 
-A contagem inferior considera todas as mídias selecionadas, não apenas as visíveis no filtro. Confira essa contagem antes de baixar. Ao mudar de aba, a seleção é reiniciada; a galeria anterior pode permanecer em memória até o encerramento do painel.
+Abra a prévia pelo controle de expansão da mídia. Use setas laterais, teclas **← / →**, miniaturas ou gesto horizontal para navegar pelo filtro atual. A navegação para nas extremidades da coleção. O botão **Tela cheia** amplia o visualizador preservando os controles laterais e a faixa de miniaturas.
 
-## Downloads
+Teclas e gestos na área de controles do vídeo permanecem disponíveis ao player. A tela cheia depende da permissão do navegador e da interação do usuário.
 
-Use o botão individual de uma mídia ou **Baixar mídias selecionadas**.
+## Aparência e persistência
 
-| Seleção | Resultado solicitado ao navegador |
-| --- | --- |
-| Um item | Arquivo de imagem ou vídeo, com extensão baseada no tipo MIME aceito. |
-| Dois ou mais itens | ZIP com os arquivos obtidos com sucesso. |
+O visual Essencial utiliza preto e violeta, com tema escuro padrão. Configurações oferecem temas claro e sistema, além do modo de exibição. Somente essas preferências são persistidas; fechar o painel ou a aba pode descartar a galeria.
 
-Exemplos de nomes: `posts-0001.jpg`, `stories-0002.mp4`, `midias-<timestamp>.zip`. Os nomes são ilustrativos; a numeração depende da ordem de preparação. O navegador evita sobrescrever arquivos existentes por meio da opção de nomes únicos.
+## Disponibilidade
 
-O limite de 250 MiB aplica-se ao conteúdo obtido em uma operação, inclusive a downloads individuais. Se alguns arquivos falharem em um lote, a extensão pode gerar o ZIP parcial e informar a quantidade de falhas. Se todos falharem, nenhum ZIP é solicitado.
-
-O botão de cancelamento interrompe a preparação; após o encaminhamento ao gerenciador de downloads, o controle do download passa ao navegador. Mantenha o painel aberto durante a preparação. Consulte a lista de downloads para verificar conclusão, interrupções e destino dos arquivos.
-
-## Configurações
-
-- **Sistema:** acompanha a preferência de cores do navegador/sistema.
-- **Claro:** força a aparência clara.
-- **Escuro:** força a aparência escura.
-- **Limpar galeria:** apaga os itens, a seleção e a prévia da aba atual. A captura pode preencher novamente a galeria durante a navegação.
-
-O tema e o modo de visualização são lembrados entre sessões. A lista de mídias não é persistida pela extensão. Fechar o painel encerra sua sessão e interrompe a observação quando não houver outra conexão ativa.
-
-## Boas práticas
-
-Abra apenas as páginas e mídias que deseja utilizar. Se uma mídia estiver indisponível, tente reabri-la e atualizar a galeria. Evite compartilhar URLs de mídia, pois podem conter assinaturas temporárias. Utilize lotes menores para reduzir o consumo de memória.
-
-Consulte [privacidade e segurança](privacidade-e-seguranca.md) e [solução de problemas](solucao-de-problemas.md).
+Reproduzir um vídeo na página não garante que exista um arquivo completo identificável. Links expirados, respostas parciais e mídias segmentadas podem impedir a prévia ou o download. Abra novamente o conteúdo e atualize a galeria; consulte o guia de solução de problemas se a falha continuar.

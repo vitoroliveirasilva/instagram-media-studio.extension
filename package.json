@@ -1,13 +1,15 @@
 {
   "name": "instagram-media-studio",
-  "version": "0.2.0",
+  "version": "0.6.1",
   "private": true,
   "type": "module",
   "scripts": {
     "dev": "vite",
-    "build": "tsc --noEmit && vite build",
+    "build": "tsc --noEmit && vite build && node scripts/finalizar-build.mjs",
     "test": "vitest run && node --test testes/*.test.mjs",
-    "verificar": "node --check public/captura.js && node --check public/rede.js && node --check public/servico.js && tsc --noEmit && npm test"
+    "verificar": "npm run verificar:comentarios && node --check public/contexto.js && node --check public/captura.js && node --check public/rede.js && node --check public/servico.js && node scripts/verificar-runtime.mjs && tsc --noEmit && npm test",
+    "verificar:comentarios": "node scripts/comentarios.mjs",
+    "empacotar": "npm run build && node scripts/empacotar-visual.mjs"
   },
   "dependencies": {
     "react": "19.1.0",
@@ -25,7 +27,8 @@
     "tailwindcss": "3.4.17",
     "postcss": "8.5.3",
     "autoprefixer": "10.4.21",
-    "vitest": "3.1.4"
+    "vitest": "3.1.4",
+    "@babel/parser": "7.29.15"
   },
   "engines": {
     "node": ">=22 <25"

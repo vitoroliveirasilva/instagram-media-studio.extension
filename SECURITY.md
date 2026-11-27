@@ -1,26 +1,15 @@
 # Política de segurança
 
-[Voltar ao início](README.md)
+## Escopo
 
-## Escopo de manutenção
+A revisão de segurança considera a versão mais recente publicada a partir de `prod`. O projeto não oferece prazo contratual de correção. Versões anteriores devem ser atualizadas antes da análise, quando possível.
 
-O projeto está em desenvolvimento. A branch `dev` e a versão 0.2.0 constituem a referência desta política, sem compromisso formal de suporte a versões anteriores ou prazo de resposta garantido.
+## Comunicação responsável
 
-## Relatar vulnerabilidades
+Para suspeitas de vulnerabilidade, utilize o relato privado do GitHub em https://github.com/vitoroliveirasilva/instagram-media-studio.extension/security/advisories/new, quando habilitado. Se o formulário não estiver disponível, abra uma issue solicitando um canal privado, sem incluir detalhes exploráveis ou dados sensíveis.
 
-Comunique o problema de maneira privada ao mantenedor do repositório. Se a opção de relato privado de vulnerabilidades estiver habilitada no GitHub, utilize-a. Caso contrário, solicite um canal privado ao mantenedor, sem publicar os detalhes da falha em uma issue aberta.
+Informe versão, ambiente, componente afetado, impacto e passos mínimos de reprodução com dados simulados. Não envie senhas, cookies, tokens, URLs assinadas ou conteúdo privado de outras pessoas.
 
-Inclua:
+## Análise
 
-- Versão da extensão, commit, navegador e sistema operacional.
-- Descrição do problema, impacto e condições necessárias para reproduzi-lo.
-- Passos mínimos de reprodução com dados sintéticos ou próprios autorizados.
-- Evidências anonimizadas e eventual sugestão de correção.
-
-Não envie credenciais, cookies, tokens, URLs assinadas, respostas completas de rede ou conteúdo de terceiros. Não tente acessar contas alheias nem contornar controles de acesso para demonstrar uma falha.
-
-## Tratamento
-
-O fluxo recomendado é reproduzir o problema em ambiente controlado, avaliar impacto, corrigir, adicionar testes de regressão, validar a correção e atualizar a documentação. A divulgação de detalhes deve ser coordenada de forma responsável.
-
-Veja os controles, permissões e riscos conhecidos em [privacidade e segurança](docs/privacidade-e-seguranca.md).
+O relato deve permitir reproduzir a falha, avaliar a fronteira de confiança envolvida e conferir a correção. A publicação dos detalhes deve aguardar a disponibilização de uma solução ou alinhamento com o mantenedor. Problemas de captura causados por mudanças do Instagram podem ser registrados como bugs comuns, desde que não revelem dados privados.

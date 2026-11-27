@@ -1,35 +1,21 @@
-# Contribuição
+# Guia de contribuição
 
-[Voltar ao início](README.md)
+## Preparação
 
-## Fluxo de alterações
+Parta de `dev`, atualize com avanço rápido e use Node.js 22. Instale com `npm ci`. Utilize uma branch temporária para alterações que precisem de revisão isolada.
 
-Use a branch `dev` como base de desenvolvimento. Alterações maiores devem ser isoladas em uma branch de trabalho e revisadas antes da integração. A branch `prod`, quando utilizada, fica reservada a versões homologadas.
+## Padrões de implementação
 
-1. Atualize sua cópia local sem sobrescrever mudanças não salvas.
-2. Defina o escopo da alteração e os critérios de aceite.
-3. Implemente a mudança com os testes correspondentes.
-4. Execute `npm run verificar` e `npm run build`.
-5. Teste no navegador quando o comportamento da extensão for afetado.
-6. Atualize a documentação e o histórico quando necessário.
-7. Revise o diff e faça o commit.
+Escreva código sem comentários, com nomes claros e funções coesas. Mantenha a explicação técnica na documentação e preserve licenças em arquivos próprios. Use português do Brasil nas mensagens, documentação e commits.
 
-## Convenções
+O runtime distribuído está em `runtime/`; `public/` permanece como referência histórica dos testes. Não inclua dependências instaladas, builds, pacotes, credenciais ou dados privados no histórico. Preserve o visual Essencial e documente mudanças de permissões, limites e comportamento de rede.
 
-- Mensagens de commit em português do Brasil, claras e no presente.
-- Interface e mensagens em português do Brasil.
-- Código sem comentários explicativos; priorize legibilidade e documentação externa.
-- Evite alterações de layout não relacionadas ao objetivo da tarefa.
-- Não inclua dependências, permissões ou integrações desnecessárias.
-- Não versione arquivos compilados, dependências instaladas, segredos ou dados de navegação.
-- Preserve a licença MIT e avisos legais aplicáveis.
+## Validação e revisão
 
-Exemplos de commits: `Corrige a seleção de mídias entre filtros`, `Adiciona testes de cancelamento de downloads`, `Atualiza o guia de instalação`.
+Execute `npm run verificar` e `npm run empacotar`. Teste manualmente os fluxos afetados no navegador. Descreva no PR o problema, o comportamento final, a validação e as limitações relevantes. Atualize os guias e o histórico quando houver alteração observável.
 
-## Revisão
+Integre desenvolvimento em `dev`; promova para `prod` por PR, após verificações. Use merge commit entre branches permanentes para preservar o histórico. Não reescreva tags publicadas. Branches temporárias podem ser removidas após integração completa.
 
-Antes de integrar, confirme se as permissões continuam proporcionais, os limites de processamento são respeitados, os erros são tratados, os estados da interface são acessíveis e as mudanças não introduzem consultas automatizadas ou coleta de dados desnecessária.
+## Licença e segurança
 
-Consulte [desenvolvimento](docs/desenvolvimento.md), [arquitetura](docs/arquitetura.md) e [testes e homologação](docs/testes-e-homologacao.md).
-
-Problemas de segurança devem seguir [SECURITY.md](SECURITY.md).
+Contribuições seguem a licença MIT do projeto. Preserve os avisos aplicáveis às dependências. Consulte `SECURITY.md` para relatar vulnerabilidades sem expor informações sensíveis.

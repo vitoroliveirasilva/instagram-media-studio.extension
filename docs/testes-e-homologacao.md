@@ -1,87 +1,44 @@
 # Testes e homologação
 
-[Voltar ao início](../README.md)
+## Verificação automatizada
 
-## Objetivo
+Execute `npm run verificar` antes de integrar e `npm run empacotar` antes de distribuir. O pipeline verifica comentários por parser, sintaxe dos scripts, manifesto do runtime, tipagem TypeScript, testes, build e estrutura do ZIP.
 
-Separar a existência dos testes da evidência de que eles foram executados e passaram. Uma extensão que compila ainda pode apresentar incompatibilidades com o Instagram ou com o navegador.
-
-## Verificações automatizadas
-
-```powershell
-npm install
-npm run verificar
-npm run build
-```
-
-| Suíte | Cobertura prevista no código |
+| Suíte | Escopo |
 | --- | --- |
-| `src/midias.test.ts` | URLs inseguras, fragmentos, duplicatas, resolução, miniaturas, categorias, dimensões, limites e MIME. |
-| `src/downloads.test.ts` | Preservação de bytes, tipo declarado, tamanho anunciado e real, arquivo vazio e cancelamento. |
-| `testes/rede.test.mjs` | Captura desativada, maior resolução, preservação da resposta original, vídeo e miniatura, domínios/rotas não elegíveis e desligamento durante resposta. |
-| `npm run verificar` | Sintaxe dos três scripts públicos, tipagem e suítes acima. |
-| Workflow de CI | Verificações, compilação, presença de arquivos declarados e empacotamento. |
+| `src/midias.test.ts` | URLs, identidade, qualidade, limites e foto de perfil. |
+| `src/downloads.test.ts` | Leitura incremental, MIME, tamanho, arquivo vazio e cancelamento. |
+| `src/capas.test.ts` | Planejamento de vídeo/capa, nomes e downloads simulados. |
+| `testes/runtime-perfil.test.mjs` | Runtime distribuído: HD em `uri`, endereço inválido, fallback por ID, dados tardios e isolamento de contexto. |
+| `testes/rede.test.mjs` | Implementação histórica de `public/`: extração de rede e isolamento de mídias. |
 
-Os testes de rede utilizam respostas sintéticas. Não autentificam no Instagram, não comprovam o funcionamento do DOM real e não substituem testes ponta a ponta do painel.
+A suíte histórica complementa a cobertura; ela não substitui os testes de `runtime/`. Os testes utilizam dados simulados e não autenticam em contas reais.
 
-## Roteiro de homologação manual
+## Validação da correção 0.6.1
 
-Utilize uma conta e mídias de teste próprias ou autorizadas. Registre navegador, versão, sistema operacional, commit e resultado de cada caso. Não registre senhas, cookies, URLs assinadas ou conteúdo privado nos relatórios.
+A falha da foto de perfil foi reproduzida na 0.6.0 e a correção foi conferida em Chromium com página controlada, captura, painel e download de JPEG. Os cenários incluíram resposta indisponível, endereço expirado, metadados tardios e HD em `uri`. Também foram exercitados os fluxos de capas, lote, prévia e navegação ampliada.
 
-| ID | Cenário | Resultado esperado |
-| --- | --- | --- |
-| H01 | Instalação no Edge | Extensão carregada sem erros e painel aberto pelo ícone. |
-| H02 | Instalação no Chrome | Mesmo comportamento observado no navegador suportado. |
-| H03 | Painel fora do Instagram | Estado de orientação, sem captura da página externa. |
-| H04 | Publicação de imagem | Mídia elegível aparece com miniatura e classificação adequada. |
-| H05 | Carrossel de imagens e vídeos | Itens elegíveis aparecem individualmente ao navegar pelo carrossel. |
-| H06 | Story de imagem | Imagem elegível disponível na galeria. |
-| H07 | Story de vídeo | Vídeo elegível com prévia ou indicação de indisponibilidade. |
-| H08 | Destaques | Mídias classificadas como destaques quando identificáveis. |
-| H09 | Reel | Vídeo elegível identificado sem duplicar sua miniatura. |
-| H10 | Filtros | Apenas a categoria escolhida é exibida; Todas reúne os itens. |
-| H11 | Seleção entre filtros | Seleção preservada entre filtros; contagem total correta. |
-| H12 | Troca de abas | Galerias separadas; seleção reiniciada. |
-| H13 | Grade e lista | Layout adequado em painéis estreitos e largos. |
-| H14 | Temas | Sistema, claro e escuro aplicados e lembrados. |
-| H15 | Pré-visualização | Imagem ampliada e vídeo reproduzível quando suportado; fechamento por Esc. |
-| H16 | Download individual | Arquivo válido, extensão adequada e destino conforme configuração. |
-| H17 | ZIP | Arquivo íntegro, nomes válidos, mídias esperadas e sem perda não informada. |
-| H18 | Falha parcial | Itens disponíveis são baixados e falhas contabilizadas. |
-| H19 | Todas as mídias indisponíveis | Mensagem de erro e nenhum ZIP vazio solicitado. |
-| H20 | Limite de tamanho | Operação respeita 250 MiB de conteúdo e informa falha. |
-| H21 | Cancelamento | Preparação interrompida, sem encaminhar arquivo ainda não solicitado. |
-| H22 | Limpar galeria | Estado da aba limpo; novas capturas podem voltar a preencher a galeria. |
-| H23 | Fechar e reabrir painel | Estado anterior de mídias não persistido; preferências preservadas. |
-| H24 | Navegação e recarga | Reconexão após atualização; sem mensagens antigas indevidas. |
-| H25 | URLs expiradas e formatos não suportados | Falha tratada, sem travamento ou bypass de controles de acesso. |
-| H26 | Teclado e alto contraste | Controles alcançáveis, foco visível e seleção distinguível. |
-| H27 | Sessão prolongada | Navegação funcional e ausência de crescimento descontrolado perceptível de recursos. |
-| H28 | Fechar painel durante captura | Observação de mídias interrompida após a última desconexão. |
-| H29 | Mídias de baixa resolução e avatares | Elementos irrelevantes filtrados conforme heurísticas, sem descartar conteúdo esperado indevidamente. |
+Essa validação controlada não comprova compatibilidade universal com sessões reais do Instagram. A plataforma pode variar conforme conta, rota e formato de resposta.
 
-## Modelo de registro
+## Roteiro manual
 
-| Campo | Preenchimento |
+| Cenário | Critério de aceite |
 | --- | --- |
-| Commit e versão | Identificador exato da compilação. |
-| Ambiente | Navegador, versão e sistema operacional. |
-| Caso | ID do cenário. |
-| Resultado | Aprovado, reprovado, bloqueado ou não executado. |
-| Evidência | Descrição ou imagem anonimizada. |
-| Observação | Erro, restrição, resultado divergente ou comportamento esperado. |
+| Instalação | Pacote carrega sem erros; versão e permissões correspondem à release. |
+| Perfil | Foto aparece, utiliza o melhor candidato identificado e baixa como imagem válida. |
+| Recuperação | Um endereço inválido não impede renderizar uma nova URL no mesmo cartão. |
+| Posts e carrosséis | Itens pertencem ao contexto aberto e imagens/vídeos não se confundem. |
+| Stories e destaques | Avanço preserva o contexto correto e não mistura outros perfis. |
+| Reels | Arquivo completo disponível pode ser reproduzido e baixado. |
+| Capas | Somente capa não requisita vídeo; ambos geram nomes correspondentes. |
+| Capa ausente | Opção fica indisponível ou o lote informa a ausência sem substituir por vídeo. |
+| Visualizador | Setas, teclado, gestos e miniaturas funcionam também em tela cheia. |
+| Downloads | Progresso, cancelamento, limites e falhas parciais possuem retorno claro. |
+| Contexto | Troca de aba/perfil preserva isolamento, sem reaproveitar seleção indevida. |
+| Aparência | Tema escuro padrão, claro e sistema; painel estreito e foco visível. |
 
-## Critérios de aceite para publicação
+Registre versão, navegador, sistema, passos, resultado esperado e resultado observado. Remova identificadores pessoais, cookies e parâmetros assinados antes de compartilhar evidências.
 
-- Tipagem, sintaxe, testes e compilação aprovados no commit que será distribuído.
-- Instalação e abertura do painel confirmadas nos navegadores suportados.
-- Captura, filtros, seleção, prévias e downloads validados com mídias de teste autorizadas.
-- Ausência de falhas críticas conhecidas de segurança, perda silenciosa de dados ou travamento.
-- Limitações remanescentes registradas e aceitas explicitamente.
-- Manifesto, versão, histórico e instruções de instalação coerentes.
+## Critérios de publicação
 
-## Estado da validação
-
-Na revisão documentada, a sintaxe dos scripts públicos e a leitura dos JSONs haviam sido verificadas. As suítes e a integração contínua estavam implementadas, mas não havia evidência de uma execução completa aprovada, compilação bem-sucedida ou homologação em sessão real do Instagram.
-
-Os cenários acima são critérios de teste, não resultados já obtidos. Atualize o registro quando houver evidências do commit correspondente.
+A CI deve concluir com sucesso, as versões devem coincidir, as notas devem existir e o ZIP deve conter manifesto na raiz, scripts, interface e licenças. Funcionalidades alteradas devem passar pelo roteiro manual aplicável. Limitações conhecidas precisam constar na documentação, sem prometer acesso a arquivos que a origem não disponibiliza.
