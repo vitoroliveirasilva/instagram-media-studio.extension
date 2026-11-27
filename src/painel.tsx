@@ -6,6 +6,8 @@ import { baixar, planejarDownloads } from './downloads'
 
 const filtros: Filtro[] = ['Todas','Reels','Posts','Stories','Destaques','Perfil']
 
+const chaveImagem = (midia: Midia) => midia.id + '|' + (midia.tipo === 'video' ? midia.miniatura : midia.url)
+
 const iconesFiltros = { Todas: LayoutGrid, Reels: Clapperboard, Posts: Images, Stories: CirclePlay, Destaques: Bookmark, Perfil: UserRound }
 
 function EscolhaVideo({ valor, alterar, desabilitado }: { valor: ModoDownload; alterar: (valor: ModoDownload) => void; desabilitado: boolean }) {
@@ -26,6 +28,7 @@ export default function Painel() {
   const [conectado, definirConectado] = useState(false)
   const [ocupado, definirOcupado] = useState(false)
   const [falhas, definirFalhas] = useState<string[]>([])
+  const recuperacoesPerfil = useRef(new Map<string, { instante: number; quantidade: number; url: string }>())
   const porta = useRef<chrome.runtime.Port | null>(null)
   const abaAtual = useRef<number | undefined>(undefined)
   const memorias = useRef(new Map<number, Midia[]>())
@@ -309,9 +312,30 @@ export default function Painel() {
     definirConfiguracoes(false)
   }
 
+  function recuperarFotoPerfil(midia: Midia) {
+    const contexto = contextoAtual.current
+    if (!contexto.startsWith('perfil:') || !porta.current) return
+    const agora = Date.now(), anterior = recuperacoesPerfil.current.get(contexto)
+    if (anterior && anterior.url === midia.url && agora - anterior.instante < 15000) return
+    const quantidade = anterior && agora - anterior.instante < 60000 ? anterior.quantidade + 1 : 1
+    if (quantidade > 3) { definirAviso('A foto de perfil não carregou. Atualize a galeria para tentar novamente.'); return }
+    recuperacoesPerfil.current.set(contexto, { instante: agora, quantidade, url: midia.url })
+    while (recuperacoesPerfil.current.size > 100) recuperacoesPerfil.current.delete(recuperacoesPerfil.current.keys().next().value!)
+    if (abaAtual.current !== undefined) memorias.current.set(abaAtual.current, (memorias.current.get(abaAtual.current) || []).filter(item => item.origem !== 'Perfil'))
+    definirMidias(lista => lista.filter(item => item.origem !== 'Perfil'))
+    definirPrevia(item => item?.origem === 'Perfil' ? null : item)
+    try { porta.current.postMessage({ acao: 'atualizar-perfil', contexto, url: midia.url }) } catch { definirAviso('Atualize a aba do Instagram para recuperar a foto de perfil.') }
+  }
+
+  function falharImagem(midia: Midia) {
+    const chave = chaveImagem(midia)
+    definirFalhas(lista => lista.includes(chave) ? lista : [...lista.slice(-499), chave])
+    if (midia.origem === 'Perfil') recuperarFotoPerfil(midia)
+  }
+
   function atualizar() {
     if (!porta.current) { definirAviso('Abra ou atualize uma página do Instagram.'); return }
-    try { porta.current.postMessage({ acao: 'atualizar' }); definirFalhas([]); definirAviso('Galeria atualizada.') }
+    try { recuperacoesPerfil.current.clear(); porta.current.postMessage({ acao: 'atualizar' }); definirFalhas([]); definirAviso('Galeria atualizada.') }
     catch { definirAviso('Atualize a página do Instagram.') }
   }
 
@@ -326,7 +350,7 @@ export default function Painel() {
       <button className="limpar-galeria" onClick={limparGaleria}><Trash2 size={15}/> Limpar galeria</button>
     </section>}
     <section className="perfil-atual" aria-label="Contexto de captura">
-      <span className="perfil-avatar">{fotoContexto ? <img src={fotoContexto.url} alt="" referrerPolicy="no-referrer"/> : <UserRound size={19}/>}</span>
+      <span className="perfil-avatar">{fotoContexto && !falhas.includes(chaveImagem(fotoContexto)) ? <img key={fotoContexto.url} src={fotoContexto.url} alt="" referrerPolicy="no-referrer" onError={() => falharImagem(fotoContexto)}/> : <UserRound size={19}/>}</span>
       <span className="perfil-nome" title={tituloContexto}>{tituloContexto || 'Abra o Instagram'}</span>
       <span className={'status-conexao ' + (conectado ? 'ativo' : '')} title={conectado ? 'Captura ativa nesta aba' : 'Aguardando uma aba do Instagram'}><i/><span>{conectado ? 'Conectado' : 'Aguardando'}</span></span>
       <button className="icone" title="Atualizar galeria" aria-label="Atualizar galeria" onClick={atualizar}><RefreshCw size={16}/></button>
@@ -343,7 +367,7 @@ export default function Painel() {
         return <article className={'cartao ' + (marcada ? 'marcado' : '')} data-origem={midia.origem} key={midia.id}>
           <div className="miniatura">
             <button className="selecionar-midia" aria-label={(marcada ? 'Desmarcar ' : 'Selecionar ') + (video ? 'vídeo' : 'imagem')} aria-pressed={marcada} onClick={() => alternar(midia.id)}>
-              {falhas.includes(midia.id) || (video && !midia.miniatura) ? <span className="placeholder">{video ? <Video size={32}/> : <Image size={32}/>}</span> : <img loading="lazy" referrerPolicy="no-referrer" src={video ? midia.miniatura : midia.url} alt={video ? 'Capa do vídeo' : midia.origem === 'Perfil' ? 'Foto de perfil' : 'Imagem do Instagram'} onError={() => definirFalhas(lista => lista.includes(midia.id) ? lista : [...lista, midia.id])}/>}
+              {falhas.includes(chaveImagem(midia)) || (video && !midia.miniatura) ? <span className="placeholder">{video ? <Video size={32}/> : <Image size={32}/>}</span> : <img key={chaveImagem(midia)} loading="lazy" referrerPolicy="no-referrer" src={video ? midia.miniatura : midia.url} alt={video ? 'Capa do vídeo' : midia.origem === 'Perfil' ? 'Foto de perfil' : 'Imagem do Instagram'} onError={() => falharImagem(midia)}/>}
               <span className="degrade"/>
               <span className="tipo">{video ? <Clapperboard size={11}/> : <Image size={11}/>}<span>{video ? 'VÍDEO' : midia.origem === 'Perfil' ? 'PERFIL' : 'IMAGEM'}</span></span>
               <span className="check">{marcada && <Check size={13}/>}</span>
@@ -376,7 +400,7 @@ export default function Painel() {
       {previa && <div className="previa" ref={visualizador}>
         <div className="previa-cabecalho"><div><span className="sobretitulo">PRÉ-VISUALIZAÇÃO</span><strong>{previa.origem === 'Perfil' ? 'Foto de perfil' : previa.origem}</strong></div><div className="previa-acoes"><span className="previa-contador" aria-live="polite" aria-atomic="true">{indicePrevia + 1} / {visiveis.length}</span><button className="icone" aria-label={telaCheia ? 'Sair da tela cheia' : 'Entrar em tela cheia'} title={telaCheia ? 'Sair da tela cheia' : 'Tela cheia'} onClick={() => void alternarTelaCheia()}>{telaCheia ? <Minimize2 size={17}/> : <Maximize2 size={17}/>}</button><button className="icone" aria-label="Fechar visualização" onClick={fecharPrevia}><X size={20}/></button></div></div>
         <div className="previa-palco" onPointerDown={iniciarDeslize} onPointerUp={concluirDeslize} onPointerCancel={() => { gestoPrevia.current = null }} onClickCapture={evento => { if (performance.now() < cliqueBloqueadoAte.current) { evento.preventDefault(); evento.stopPropagation() } }}>
-          {previa.tipo === 'video' ? <video ref={videoAmpliado} key={previa.id} src={previa.url} poster={previa.miniatura || undefined} controls controlsList="nofullscreen" playsInline preload="metadata" onError={() => definirAviso('Vídeo indisponível. Abra a publicação novamente.')}/> : <img draggable={false} src={previa.url} alt="Pré-visualização da mídia" referrerPolicy="no-referrer" onError={() => definirAviso('Imagem indisponível. Abra a publicação novamente.')}/>}
+          {previa.tipo === 'video' ? <video ref={videoAmpliado} key={previa.id} src={previa.url} poster={previa.miniatura || undefined} controls controlsList="nofullscreen" playsInline preload="metadata" onError={() => definirAviso('Vídeo indisponível. Abra a publicação novamente.')}/> : <img draggable={false} src={previa.url} alt="Pré-visualização da mídia" referrerPolicy="no-referrer" onError={() => { if (previa.origem === 'Perfil') falharImagem(previa); else definirAviso('Imagem indisponível. Abra a publicação novamente.') }}/>}
           <button className="previa-seta anterior" aria-label="Mídia anterior" disabled={indicePrevia <= 0} onClick={() => navegarPrevia(-1)}><ChevronLeft size={22}/></button>
           <button className="previa-seta proxima" aria-label="Próxima mídia" disabled={indicePrevia < 0 || indicePrevia >= visiveis.length - 1} onClick={() => navegarPrevia(1)}><ChevronRight size={22}/></button>
         </div>

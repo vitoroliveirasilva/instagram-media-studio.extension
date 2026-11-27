@@ -66,7 +66,7 @@ A existência do workflow não equivale a uma execução aprovada. Consulte [Act
 
 A branch `dev` é o ambiente de desenvolvimento e homologação. A branch `prod`, quando utilizada, deve receber apenas alterações aprovadas conforme os critérios de [testes e homologação](testes-e-homologacao.md).
 
-Para uma nova versão, alinhe `package.json` e `public/manifest.json`, atualize o [histórico](../CHANGELOG.md), execute as verificações e valide a extensão no navegador. Não confunda artefato de CI com publicação nas lojas oficiais.
+Para uma nova versão, alinhe `package.json` e `runtime/manifest.json`, atualize o [histórico](../CHANGELOG.md), execute as verificações e valide a extensão no navegador. Não confunda artefato de CI com publicação nas lojas oficiais.
 
 Leia também [contribuição](../CONTRIBUTING.md).
 

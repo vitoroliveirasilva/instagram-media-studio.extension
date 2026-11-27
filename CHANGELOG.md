@@ -4,6 +4,15 @@
 
 O histórico registra funcionalidades e alterações relevantes do projeto. Os itens descrevem mudanças implementadas, não certificam que todos os cenários foram homologados.
 
+## 0.6.1 — recuperação da foto de perfil
+
+- Erros de imagem associados à URL, permitindo tentar novamente quando chega um endereço novo.
+- Recuperação automática de fotos que falharam e descarte temporário de links inválidos.
+- Compatibilidade com fotos HD em `uri`, dados tardios e perfis sem `header`.
+- Priorização da foto HD declarada sem dimensões artificiais.
+- Scripts distribuídos em `runtime/`, usados pelo build, com testes dos arquivos reais do pacote.
+- Reprodução da falha da 0.6.0 e validação de captura, exibição e download no navegador.
+
 ## 0.6.0 — visual Essencial
 
 - Aplicação da direção aprovada, em preto e violeta discreto, com galeria sem cartões externos.

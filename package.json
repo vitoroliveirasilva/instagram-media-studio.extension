@@ -1,13 +1,13 @@
 {
   "name": "instagram-media-studio",
-  "version": "0.3.3",
+  "version": "0.6.1",
   "private": true,
   "type": "module",
   "scripts": {
     "dev": "vite",
     "build": "tsc --noEmit && vite build",
     "test": "vitest run && node --test testes/*.test.mjs",
-    "verificar": "node --check public/contexto.js && node --check public/captura.js && node --check public/rede.js && node --check public/servico.js && tsc --noEmit && npm test"
+    "verificar": "node --check public/contexto.js && node --check public/captura.js && node --check public/rede.js && node --check public/servico.js && node scripts/verificar-runtime.mjs && tsc --noEmit && npm test"
   },
   "dependencies": {
     "react": "19.1.0",

@@ -25,10 +25,12 @@ flowchart TD
 
 | Caminho | Responsabilidade |
 | --- | --- |
-| `public/manifest.json` | Identidade, permissões, política de conteúdo, scripts e painel. |
-| `public/servico.js` | Configuração do painel na instalação e inicialização do navegador. |
-| `public/rede.js` | Observação das respostas de rede da página e extração de mídias. |
-| `public/captura.js` | Observação de elementos visíveis, validação e comunicação com o painel. |
+| `runtime/manifest.json` | Identidade, permissões, política de conteúdo, scripts e painel. |
+| `runtime/servico.js` | Configuração do painel na instalação e inicialização do navegador. |
+| `runtime/perfil.js` | Normalização de fotos de perfil, prioridade HD e identificação no DOM. |
+| `runtime/extrator.js` | Extração e seleção de metadados de mídia por contexto. |
+| `runtime/rede.js` | Observação das respostas de rede da página e extração de mídias. |
+| `runtime/captura.js` | Observação de elementos visíveis, validação e comunicação com o painel. |
 | `src/principal.tsx` | Inicialização da aplicação React. |
 | `src/painel.tsx` | Estado da galeria, filtros, seleção, configuração, conexão e prévia. |
 | `src/midias.ts` | Normalização, identidade, deduplicação, formatos e nomes. |
@@ -115,4 +117,6 @@ Veja [privacidade e segurança](privacidade-e-seguranca.md) e [testes e homologa
 
 ## Evolução na versão 0.3.0
 
-O módulo `public/contexto.js` identifica o contexto pela rota. A navegação entre Stories do mesmo perfil preserva a galeria; mudanças de contexto reiniciam seu estado. Respostas estruturadas são filtradas por usuário, código de publicação ou identificador de destaque, com herança de contexto para carrosséis e conjuntos de Stories. A emissão ocorre em lotes de até 100 candidatos; o percurso tem limite de 50.000 iterações e até 5.000 itens por array. A galeria mantém até 10.000 mídias por aba. A limpeza envia os identificadores ao script de captura, invalida respostas anteriores e recebe confirmação. Os demais limites de tamanho de resposta e download permanecem. A identificação depende da estrutura disponibilizada pela página e precisa de homologação real.
+O módulo `runtime/contexto.js` identifica o contexto pela rota. A navegação entre Stories do mesmo perfil preserva a galeria; mudanças de contexto reiniciam seu estado. Respostas estruturadas são filtradas por usuário, código de publicação ou identificador de destaque, com herança de contexto para carrosséis e conjuntos de Stories. A emissão ocorre em lotes de até 100 candidatos; o percurso tem limite de 60.000 iterações e até 5.000 itens por array. A galeria mantém até 10.000 mídias por aba. A limpeza envia os identificadores ao script de captura, invalida respostas anteriores e recebe confirmação. Os demais limites de tamanho de resposta e download permanecem. A identificação depende da estrutura disponibilizada pela página e precisa de homologação real.
+
+A partir da correção 0.6.1, `runtime/` é o diretório público do Vite e contém os scripts realmente distribuídos. Os arquivos antigos de `public/` permanecem para cobertura histórica. Os testes `runtime-perfil.test.mjs` verificam a implementação atual.
