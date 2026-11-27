@@ -1,0 +1,55 @@
+{
+  "manifest_version": 3,
+  "name": "Instagram Media Studio",
+  "description": "Visualize e baixe imagens e vídeos carregados durante a navegação no Instagram.",
+  "version": "0.6.1",
+  "minimum_chrome_version": "116",
+  "permissions": [
+    "sidePanel",
+    "storage",
+    "downloads"
+  ],
+  "host_permissions": [
+    "https://www.instagram.com/*",
+    "https://*.cdninstagram.com/*",
+    "https://*.fbcdn.net/*"
+  ],
+  "action": {
+    "default_title": "Abrir Instagram Media Studio"
+  },
+  "side_panel": {
+    "default_path": "index.html"
+  },
+  "background": {
+    "service_worker": "servico.js"
+  },
+  "content_scripts": [
+    {
+      "matches": [
+        "https://www.instagram.com/*"
+      ],
+      "js": [
+        "contexto.js",
+        "perfil.js",
+        "extrator.js",
+        "rede.js"
+      ],
+      "run_at": "document_start",
+      "world": "MAIN"
+    },
+    {
+      "matches": [
+        "https://www.instagram.com/*"
+      ],
+      "js": [
+        "contexto.js",
+        "perfil.js",
+        "captura.js"
+      ],
+      "run_at": "document_idle"
+    }
+  ],
+  "content_security_policy": {
+    "extension_pages": "script-src 'self'; object-src 'none'; base-uri 'none'; connect-src 'self' https://*.cdninstagram.com https://*.fbcdn.net; img-src 'self' https://*.cdninstagram.com https://*.fbcdn.net; media-src 'self' https://*.cdninstagram.com https://*.fbcdn.net blob:"
+  }
+}

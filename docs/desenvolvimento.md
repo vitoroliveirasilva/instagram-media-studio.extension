@@ -1,75 +1,47 @@
-# Desenvolvimento
+# Desenvolvimento e publicação
 
-[Voltar ao início](../README.md)
+## Ambiente
 
-## Ambiente e tecnologias
-
-| Ferramenta | Versão declarada / finalidade |
-| --- | --- |
-| Node.js | 22 LTS recomendado; intervalo >=22 e <25. |
-| React / React DOM | 19.1.0; interface. |
-| TypeScript | 5.8.3; tipagem estática. |
-| Vite | 6.3.5; desenvolvimento e compilação. |
-| Tailwind CSS | 3.4.17; base de estilos e utilitários. |
-| Lucide React | 0.468.0; ícones. |
-| JSZip | 3.10.1; arquivos ZIP. |
-| Vitest | 3.1.4; testes unitários. |
-| Manifest V3 | Integração com o navegador. |
-
-As versões são as declaradas no `package.json` da versão 0.2.0, e não uma recomendação de que sejam as versões mais recentes.
-
-## Comandos
+Use Node.js 22 e npm. O intervalo aceito é `>=22 <25`. `package.json` fixa as dependências diretas e `package-lock.json` registra sua resolução para instalação com `npm ci`.
 
 | Comando | Finalidade |
 | --- | --- |
-| `npm install` | Instalar as dependências declaradas. |
-| `npm run dev` | Iniciar o servidor de desenvolvimento Vite. |
-| `npm test` | Executar os testes Vitest e os testes Node.js em `testes/`. |
-| `npm run verificar` | Validar sintaxe dos scripts públicos, tipagem TypeScript e testes. |
-| `npm run build` | Verificar tipagem e compilar para `dist/`. |
+| `npm ci` | Instalar a árvore registrada no lockfile. |
+| `npm run dev` | Iniciar a interface no Vite; APIs do navegador exigem a extensão carregada. |
+| `npm test` | Executar Vitest e testes Node.js. |
+| `npm run verificar:comentarios` | Analisar JS, TS, TSX, CSS e HTML do projeto. |
+| `npm run verificar` | Auditar comentários, sintaxe, runtime, tipagem e testes. |
+| `npm run build` | Compilar `dist/`, validar manifesto e preservar licenças externas. |
+| `npm run empacotar` | Compilar e gerar ZIP e SHA-256 em `artifacts/`. |
 
-O servidor Vite isoladamente não reproduz as APIs `chrome.*` do navegador. Para testar a integração, compile o projeto e recarregue a extensão sem compactação.
+O código distribuído vem de `runtime/` e `src/`. `public/` é uma referência histórica coberta por testes; alterar somente essa pasta não corrige o pacote atual. Não versione `dist/`, `artifacts/` ou `node_modules/`.
 
-## Ciclo de trabalho
+## Convenções
 
-```powershell
-git switch dev
-git pull --ff-only origin dev
-npm install
-npm run verificar
-npm run build
-```
+Código sem comentários, com nomes claros e documentação técnica externa. O auditor usa parser para JavaScript/TypeScript e PostCSS para CSS; URLs, expressões regulares e strings não são tratadas como comentários. Licenças e avisos obrigatórios permanecem em arquivos próprios.
 
-Faça alterações pequenas e verificáveis. Após modificar o manifesto, os scripts de página ou o service worker, recarregue a extensão no gerenciador e atualize a aba do Instagram. Para mudanças na interface, reabra o painel após a compilação.
+Use português do Brasil nas mensagens e documentos, tipagem estrita, entradas simuladas nos testes e tratamento explícito de dados não confiáveis. Preserve a direção Essencial e justifique mudanças de permissões, rede ou limites.
 
-## Padrões
+## Branches
 
-- Interface, mensagens, documentação e nomes próprios de domínio em português do Brasil.
-- Código sem comentários explicativos; utilize nomes claros, funções coesas e documentação externa. Preserve avisos legais obrigatórios em dependências ou licenças.
-- TypeScript com tipagem estrita e tratamento explícito de entradas não confiáveis.
-- Scripts de captura sem dependência de servidor ou consultas adicionais à API da plataforma.
-- Sem inclusão de senhas, cookies, URLs assinadas reais, dados pessoais ou arquivos baixados nos testes.
-- Alterações de permissões e limites devem ser justificadas na documentação.
-- Não alterar a interface aprovada sem necessidade funcional ou solicitação.
+`dev` concentra desenvolvimento e homologação. `prod` é a referência publicada e a branch padrão do repositório. Branches temporárias podem ser removidas depois que seu conteúdo estiver integrado e não houver trabalho pendente.
+
+Fluxo: alteração em branch temporária ou `dev`, verificação, PR para `prod`, merge e publicação. Use merge commit para preservar ancestralidade entre branches permanentes. Após a promoção, `dev` pode receber avanço rápido para o merge de `prod`, mantendo ambas alinhadas sem reescrever histórico.
 
 ## Integração contínua
 
-O arquivo `.github/workflows/verificacao.yml` configura execuções em pushes e pull requests para `dev` e `prod`, além de execução manual quando disponível no GitHub. A presença de ambas no workflow não comprova que as duas branches existam.
+O workflow `.github/workflows/verificacao.yml` roda em pushes e PRs para `dev` e `prod`, além de execução manual. O job de verificação usa Node.js 22, `npm ci`, auditoria, testes, build e empacotamento. A extensão e o pacote ficam disponíveis como artefatos por 14 dias.
 
-O job utiliza Ubuntu, Node.js 22, permissões de leitura e prazo de dez minutos. A sequência é instalação de dependências, verificação, compilação, conferência dos caminhos essenciais do manifesto compilado e publicação do artefato `instagram-media-studio` por 14 dias. Execuções concorrentes para a mesma referência podem ser canceladas em favor da mais recente.
+Somente um push ou execução manual em `prod`, após sucesso das verificações, habilita a publicação com permissão `contents: write`. O job baixa o pacote validado e publica uma release estável com ZIP, SHA-256 e notas da versão. PRs não publicam releases.
 
-O workflow usa `npm install`, não `npm ci`, pois não há lockfile versionado na revisão atual. Embora as dependências diretas estejam fixadas, dependências transitivas podem variar. Uma melhoria futura é gerar, revisar e versionar o lockfile e migrar a CI para instalação reprodutível.
+## Preparar uma versão
 
-A existência do workflow não equivale a uma execução aprovada. Consulte [Actions](https://github.com/vitoroliveirasilva/instagram-media-studio.extension/actions) e os logs de cada job.
+1. Alinhe as versões de `package.json`, `package-lock.json` e `runtime/manifest.json`.
+2. Atualize `CHANGELOG.md` e crie `docs/releases/vVERSAO.md`.
+3. Execute `npm ci`, `npm run verificar` e `npm run empacotar`.
+4. Homologue os cenários afetados e registre limitações nas notas.
+5. Abra e integre o PR para `prod`; acompanhe a execução e os assets da release.
 
-## Publicação
+A tag deve apontar para o commit publicado. Uma tag existente em outro commit faz a publicação falhar; o workflow não reescreve tags. Uma repetição no mesmo commit atualiza notas e assets da mesma versão. Para alterações de código após publicação, use uma nova versão.
 
-A branch `dev` é o ambiente de desenvolvimento e homologação. A branch `prod`, quando utilizada, deve receber apenas alterações aprovadas conforme os critérios de [testes e homologação](testes-e-homologacao.md).
-
-Para uma nova versão, alinhe `package.json` e `public/manifest.json`, atualize o [histórico](../CHANGELOG.md), execute as verificações e valide a extensão no navegador. Não confunda artefato de CI com publicação nas lojas oficiais.
-
-Leia também [contribuição](../CONTRIBUTING.md).
-
-### Primeira distribuição
-
-O job `publicar` é executado apenas na `prod`, após sucesso do job de verificação, em push ou execução manual. Ele publica exclusivamente a versão 0.2.0 como pré-lançamento, com ZIP compilado e checksum SHA-256, sem substituir uma release existente. A publicação exige que o token do workflow tenha permissão de escrita em conteúdo. Versões futuras precisam de um processo de release atualizado e de homologação correspondente.
+A publicação no GitHub não instala a atualização no navegador e não publica o pacote nas lojas oficiais.
