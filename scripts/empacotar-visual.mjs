@@ -1,31 +1,31 @@
 import assert from 'node:assert/strict'
 import { createHash } from 'node:crypto'
-import { readFile, readdir, writeFile } from 'node:fs/promises'
+import { readFile, readdir, writeFile, mkdir } from 'node:fs/promises'
 import path from 'node:path'
 import JSZip from 'jszip'
 
-const [entrada, saida] = process.argv.slice(2)
-if (!entrada || !saida) throw new Error('Uso: node scripts/empacotar-visual.mjs BASE_0.4.0.zip NOVO_0.6.1.zip')
-if (path.resolve(entrada) === path.resolve(saida)) throw new Error('A saída deve ser diferente do pacote original.')
-const bytes = await readFile(entrada)
-assert.equal(createHash('sha256').update(bytes).digest('hex'), 'e986ff5dc6d14520877fff3e82ec1b523f6b5b558a19ba7c9629d352d2fc26fd', 'O pacote de entrada deve ser a versão 0.4.0 aprovada.')
-const base = await JSZip.loadAsync(bytes)
-const zip = await JSZip.loadAsync(bytes)
-const manifesto = JSON.parse(await base.file('manifest.json').async('string'))
-assert.equal(manifesto.version, '0.4.0')
-for (const nome of Object.keys(zip.files)) if (nome.startsWith('assets/')) zip.remove(nome)
-for (const nome of await readdir('dist/assets')) zip.file('assets/' + nome, await readFile(path.join('dist/assets', nome)))
-zip.file('index.html', await readFile('dist/index.html'))
-for (const nome of await readdir('runtime')) zip.file(nome, await readFile(path.join('runtime', nome)))
-const corrigido = JSON.parse(await readFile('runtime/manifest.json', 'utf8'))
-assert.equal(corrigido.version, '0.6.1')
-manifesto.content_scripts = corrigido.content_scripts
-manifesto.version = '0.6.1'
-zip.file('manifest.json', JSON.stringify(manifesto, null, 2) + '\n')
-zip.file('LEIA-ME.md', await readFile('docs/visual.md', 'utf8'))
-const resultado = await zip.generateAsync({ type: 'nodebuffer', compression: 'DEFLATE', compressionOptions: { level: 9 } })
-const final = await JSZip.loadAsync(resultado, { checkCRC32: true })
-for (const nome of await readdir('runtime')) assert.deepEqual(await final.file(nome).async('nodebuffer'), await readFile(path.join('runtime', nome)), 'Runtime divergente: ' + nome)
-for (const nome of ['contexto.js','servico.js']) assert.deepEqual(await final.file(nome).async('nodebuffer'), await base.file(nome).async('nodebuffer'))
-await writeFile(saida, resultado)
-console.log(JSON.stringify({ arquivo: path.resolve(saida), bytes: resultado.length, sha256: createHash('sha256').update(resultado).digest('hex') }))
+const pacote = JSON.parse(await readFile('package.json', 'utf8'))
+const manifesto = JSON.parse(await readFile('dist/manifest.json', 'utf8'))
+assert.equal(manifesto.version, pacote.version)
+const saida = process.argv[2] || 'artifacts'
+await mkdir(saida, { recursive: true })
+const zip = new JSZip()
+async function incluir(diretorio, prefixo = '') {
+  for (const item of (await readdir(diretorio, { withFileTypes: true })).sort((a, b) => a.name.localeCompare(b.name, 'en'))) {
+    const nome = prefixo + item.name
+    const arquivo = path.join(diretorio, item.name)
+    if (item.isDirectory()) await incluir(arquivo, nome + '/')
+    else zip.file(nome, await readFile(arquivo), { date: new Date('2000-01-01T00:00:00Z'), createFolders: false })
+  }
+}
+await incluir('dist')
+zip.file('LEIA-ME.md', await readFile('docs/instalacao.md'), { date: new Date('2000-01-01T00:00:00Z') })
+const bytes = await zip.generateAsync({ type: 'nodebuffer', compression: 'DEFLATE', compressionOptions: { level: 9 } })
+const validado = await JSZip.loadAsync(bytes, { checkCRC32: true })
+assert.equal(JSON.parse(await validado.file('manifest.json').async('string')).version, pacote.version)
+for (const arquivo of ['LICENSE', 'THIRD-PARTY-LICENSES.txt', 'index.html', ...manifesto.content_scripts.flatMap(item => item.js), manifesto.background.service_worker]) assert.ok(validado.file(arquivo), arquivo)
+const nome = 'instagram-media-studio-v' + pacote.version + '.zip'
+const sha256 = createHash('sha256').update(bytes).digest('hex')
+await writeFile(path.join(saida, nome), bytes)
+await writeFile(path.join(saida, nome + '.sha256'), sha256 + '  ' + nome + '\n')
+console.log(JSON.stringify({ arquivo: path.resolve(saida, nome), bytes: bytes.length, sha256 }))

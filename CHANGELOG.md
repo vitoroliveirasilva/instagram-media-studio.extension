@@ -4,7 +4,12 @@
 
 O histórico registra funcionalidades e alterações relevantes do projeto. Os itens descrevem mudanças implementadas, não certificam que todos os cenários foram homologados.
 
-## 0.6.1 — recuperação da foto de perfil
+## 0.6.1 — recuperação da foto de perfil e distribuição
+
+- Documentação consolidada para o comportamento atual e fluxo dev/prod.
+- Auditoria de comentários por parser, com preservação de licenças em arquivos externos.
+- Lockfile versionado, CI com npm ci e pacote gerado diretamente do código.
+- Publicação estável automatizada com ZIP, SHA-256 e notas da versão.
 
 - Erros de imagem associados à URL, permitindo tentar novamente quando chega um endereço novo.
 - Recuperação automática de fotos que falharam e descarte temporário de links inválidos.
@@ -37,7 +42,7 @@ O histórico registra funcionalidades e alterações relevantes do projeto. Os i
 - Tratamento explícito de capas ausentes, com 12 testes adicionais e conferência no navegador.
 - Scripts funcionais de captura preservados a partir da versão 0.4.0 aprovada.
 
-## Reformulação visual — em revisão
+## 0.4.x — evolução visual e de captura
 
 - Paleta coral, marca, temas claro e escuro, filtros e cartões maiores.
 - Contador de mídias, controles de seleção, lista, prévia e estados vazios redesenhados.
@@ -45,35 +50,35 @@ O histórico registra funcionalidades e alterações relevantes do projeto. Os i
 - Empacotador visual 0.4.1 sobre a base 0.4.0 aprovada, preservando seus scripts funcionais.
 - Guia de atualização e reprodução em [visual](docs/visual.md).
 
-## 0.3.3 — em desenvolvimento
+## 0.3.3 — evolução de desenvolvimento
 
 - Reconhecimento de identificadores de destaques em conjuntos e chaves de respostas, inclusive carregamentos iniciados no perfil.
 - Suporte às rotas alternativas de Reels e a novos campos de vídeo e foto de perfil.
 - Recuperação da foto de perfil pelo cabeçalho quando a identificação é inequívoca.
 - Diagnóstico de captura opcional, com contagens técnicas sem URLs, nomes de perfis ou credenciais.
 
-## 0.3.2 — em desenvolvimento
+## 0.3.2 — evolução de desenvolvimento
 
 - Leitura limitada de metadados JSON já presentes na página, sem consultas adicionais à API.
 - Preferência por foto de perfil HD declarada, sem inventar dimensões e sem substituição por miniatura de menor prioridade.
 - Identificação adicional de vídeos diretos em estruturas aninhadas e do Story atual pelo identificador.
 - Mensagem explícita para mídias segmentadas ou protegidas que não disponibilizam um arquivo direto completo.
 
-## 0.3.1 — em desenvolvimento
+## 0.3.1 — evolução de desenvolvimento
 
 - Suporte a endereços diretos de vídeos e imagens em estruturas GraphQL adicionais, inclusive carrosséis.
 - Foto de perfil selecionável separadamente, com preferência pela melhor resolução identificada.
 - Rejeição de respostas parciais no download e de URLs explicitamente segmentadas.
 - Testes simulados de vídeo, carrossel e foto de perfil.
 
-## 0.3.0 — em desenvolvimento
+## 0.3.0 — evolução de desenvolvimento
 
 - Galeria contextual por perfil, sequência de Stories, destaque e publicação.
 - Captura de respostas filtrada por perfil ou publicação identificável, com emissão em lotes.
 - Limpeza acessível na barra da galeria, com supressão dos itens já capturados até nova atualização ou mudança de contexto.
 - Limite de galeria ampliado para 10.000 itens; homologação real pendente.
 
-## Não publicado
+## Base documental
 
 ### Documentação
 
@@ -115,4 +120,4 @@ Commit de referência: [5b8eafc](https://github.com/vitoroliveirasilva/instagram
 
 ## Limitações conhecidas
 
-A compilação completa e a homologação real devem ser comprovadas antes de uma distribuição estável. Consulte [testes e homologação](docs/testes-e-homologacao.md).
+A captura depende dos formatos e arquivos disponibilizados pela sessão do Instagram. A validação controlada não certifica todas as sessões reais. Consulte [testes e homologação](docs/testes-e-homologacao.md).
